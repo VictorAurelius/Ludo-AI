@@ -49,6 +49,7 @@ class Statekeep:
         # set initial active and next player
         self.activeplayer = self.playerRed
         self.nextplayer = self.playerBlue
+        self.display_player = None
         
     # set game initialization variables, this method may grow and become more useful later        
     def start_game(self):
@@ -135,7 +136,16 @@ class Statekeep:
             self.greenTurn = False
             self.redTurn = True
         
-      
+    # Thêm phương thức để cập nhật người chơi hiển thị
+    def update_display_player(self):
+        if self.redTurn:
+            self.display_player = self.playerRed
+        elif self.blueTurn:
+            self.display_player = self.playerBlue
+        elif self.yellowTurn:
+            self.display_player = self.playerYellow
+        elif self.greenTurn:
+            self.display_player = self.playerGreen
 
    
     

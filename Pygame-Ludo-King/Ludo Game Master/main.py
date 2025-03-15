@@ -47,6 +47,7 @@ title_button = pygame.Rect(820, 10, 160, 40)
 # Các biến toàn cục
 roll_button_enabled = True  # Trạng thái nút tung xúc xắc
 can_move = False  # Biến kiểm tra có thể di chuyển không
+dice_animating = False  # Biến kiểm tra xúc xắc đang animating
 # Reset for new game
 showing_dialog = False  # Biến kiểm tra đang hiện dialog
 yes_button = pygame.Rect(410, 260, 60, 30)  # Nút "Có"
@@ -110,7 +111,7 @@ def draw_dialog(win):
     win.blit(no_text, (540, 255))
 
 def draw_sidebar(win, Statekpr):
-    global star_effect_message, star_effect_time
+    global star_effect_message, star_effect_time, dice_animating
     
     # Vẽ background cho sidebar
     pygame.draw.rect(win, WHITE, (800, 0, 200, 800))
@@ -127,22 +128,19 @@ def draw_sidebar(win, Statekpr):
     text = vn_font.render(u"Lượt của:", True, BLACK)
     win.blit(text, (810, 80))
     
-    # Xác định người chơi hiện tại dựa trên lượt
-    if Statekpr.redTurn:
-        current_player = Statekpr.playerRed
-    elif Statekpr.blueTurn:
-        current_player = Statekpr.playerBlue
-    elif Statekpr.yellowTurn:
-        current_player = Statekpr.playerYellow
-    elif Statekpr.greenTurn:
-        current_player = Statekpr.playerGreen
-        
-    color = COLORS[current_player.color]
-    text = vn_font.render(current_player.name, True, color)
+    # Nếu display_player chưa được khởi tạo, khởi tạo ban đầu dựa trên lượt
+    if Statekpr.display_player is None:
+        Statekpr.update_display_player()
+            
+    # Hiển thị tên người chơi hiện tại
+    color = COLORS[Statekpr.display_player.color]
+    text = vn_font.render(Statekpr.display_player.name, True, color)
     win.blit(text, (810, 110))
     
     # Vẽ nút tung xúc xắc
-    button_color = GRAY if roll_button_enabled else (100, 100, 100)  # Tối màu khi disable
+    button_color = GRAY
+    if not roll_button_enabled or dice_animating:  # Thêm điều kiện dice_animating
+        button_color = (100, 100, 100)  # Tối màu khi disable hoặc đang animation
     pygame.draw.rect(win, button_color, roll_button)
     text = vn_font.render(u"Tung xúc xắc", True, WHITE)
     win.blit(text, (820, 335))
@@ -153,10 +151,11 @@ def draw_sidebar(win, Statekpr):
     win.blit(scaled_dice1, (820, 180))
     win.blit(scaled_dice2, (910, 180))
     
-    # Hiển thị tổng hai xúc xắc
-    total = dice_num1 + dice_num2
-    total_text = vn_font.render(f"Tổng: {total}", True, BLACK)
-    win.blit(total_text, (850, 270))
+    # Hiển thị tổng hai xúc xắc CHỈ KHI ANIMATION KẾT THÚC
+    if not dice_animating:  # Chỉ hiển thị khi animation kết thúc
+        total = dice_num1 + dice_num2
+        total_text = vn_font.render(f"Tổng: {total}", True, BLACK)
+        win.blit(total_text, (850, 270))
     
     # Hiển thị thông tin quân cờ của từng người chơi
     y_pos = 400
@@ -166,8 +165,7 @@ def draw_sidebar(win, Statekpr):
         win.blit(text, (810, y_pos))
         
         # Đếm số quân về đích (counter = 52)
-        finished = sum(1 for pawn in player.pawnlist if pawn.counter >= 52)
-        text = vn_font.render(f"Về đích: {finished}", True, BLACK)
+        text = vn_font.render(f"Về đích: {player.pawns_home}", True, BLACK)
         win.blit(text, (820, y_pos + 30))
         
         # Hiển thị số lần bị đá
@@ -191,7 +189,7 @@ def main(player_names=None):
     # Khởi tạo lại Pygame display (quan trọng)
     pygame.display.set_mode((1000, 800))
     # Declare globals at the start of function
-    global current_dice1, current_dice2, roll_button_enabled, dice_num1, dice_num2, can_move, showing_dialog
+    global current_dice1, current_dice2, roll_button_enabled, dice_num1, dice_num2, can_move, showing_dialog, dice_animating, display_player
     
     # Reset dialog state
     showing_dialog = False
@@ -252,7 +250,15 @@ def main(player_names=None):
                 elif hasattr(pawn, 'just_finished_animation') and pawn.just_finished_animation:
                     # Quân vừa hoàn thành animation, xử lý các hiệu ứng sau di chuyển
                     pawn.just_finished_animation = False
-                    
+                    # Kiểm tra nếu quân đã về đích (counter = 52 hoặc 53) để tăng số quân về đích
+                    if pawn.counter == 52 or pawn.counter == 53:
+                        # Tìm người chơi sở hữu quân này và tăng pawns_home
+                        for player in Statekpr.players:
+                            if pawn in player.pawnlist:
+                                player.pawns_home += 1
+                                break
+                    # Lấy vị trí hiện tại làm new_pos
+                    new_pos = pawn.rect.center
                     # Kiểm tra có quân nào của đối thủ ở vị trí mới không
                     for other_player in Statekpr.players:
                         if other_player != current_player:
@@ -308,9 +314,12 @@ def main(player_names=None):
                             Statekpr.greenTurn = False
                             Statekpr.redTurn = True
                             next_player = Statekpr.playerRed
-                                            
-                        # Cập nhật trạng thái quân cờ
-                        pawn.update_pawn_state(current_player, next_player)
+                        
+                        # Cập nhật người chơi hiển thị sau khi chuyển lượt
+                        Statekpr.update_display_player()
+                            
+                    # Cập nhật trạng thái quân cờ
+                    pawn.update_pawn_state(current_player, next_player)
         
         # Update dice animation
         if dice_animating:
@@ -330,6 +339,7 @@ def main(player_names=None):
                     current_dice1 = dice_images[final_dice_value1]
                     current_dice2 = dice_images[final_dice_value2]
                     dice_animating = False
+                    Statekpr.update_display_player()
         
         #Set event logic
         for event in pygame.event.get():
@@ -365,7 +375,7 @@ def main(player_names=None):
                     continue
                 
                 # Kiểm tra nếu click vào nút tung xúc xắc
-                if roll_button.collidepoint(mouse_pos) and roll_button_enabled:
+                if roll_button.collidepoint(mouse_pos) and roll_button_enabled and not dice_animating:
                     if not Statekpr.gamestart:
                         Statekpr.start_game()
                     # Start dice animation
@@ -380,7 +390,7 @@ def main(player_names=None):
                     dice_num1 = final_dice_value1 + 1  # Store final numbers (1-6)
                     dice_num2 = final_dice_value2 + 1
                     dice_sum = dice_num1 + dice_num2  # Calculate sum
-                    
+        
                     # Kiểm tra có thể di chuyển không
                     can_move = False
                     
@@ -466,7 +476,8 @@ def main(player_names=None):
                                 # Trường hợp 1: Xuất quân (quân đang ở chuồng và tổng >= 10)
                                 if pawn.counter == 0 and dice_num1 + dice_num2 >= 10:
                                     pawn.counter = 1  # Đặt counter là 1 (vị trí xuất phát)
-                                    pawn.rect.center = pawn.dict[1]  # Đặt quân ở vị trí xuất phát
+                                    new_pos = pawn.dict[1]  # Đặt quân ở vị trí xuất phát
+                                    pawn.rect.center = new_pos  # Đặt quân ở vị trí xuất phát
                                     current_player.pawns += 1  # Tăng số quân trên bàn
                                     valid_move = True
                                     # Kiểm tra có quân nào của đối thủ ở vị trí mới không
@@ -503,6 +514,7 @@ def main(player_names=None):
                                             
                                     # Cập nhật trạng thái quân cờ
                                     pawn.update_pawn_state(current_player, next_player)
+                                    Statekpr.update_display_player()
                                     
                                 # Trường hợp 2: Di chuyển quân trên bàn (chỉ khi quân không phải vừa được xuất ra)
                                 elif pawn.counter > 0 and pawn.counter + dice_num1 + dice_num2 <= 53:

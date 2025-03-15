@@ -43,11 +43,6 @@ class Pawn(pygame.sprite.Sprite):
             self.activepawn = False
             #this attribute is not fully implemented
             self.king = True
-            # Find the player this pawn belongs to and increment their pawns_home counter
-            for player in StateKpr.players:
-                if self in player.pawnlist:
-                    player.pawns_home += 1
-                    break
         elif self.counter > 53:
             self.counter -= dice
         # self.rect.center = self.dict[self.counter]  
