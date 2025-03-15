@@ -36,7 +36,7 @@ class Pawn(pygame.sprite.Sprite):
         # add the dice roll value to the pawn's counter
         old_counter = self.counter
         self.counter += dice
-        if self.counter == 52:
+        if self.counter == 52 or self.counter == 53:
             print('PawnKing')
             self.kingPawn += 1
             #pawn state is set to inactive
@@ -48,7 +48,7 @@ class Pawn(pygame.sprite.Sprite):
                 if self in player.pawnlist:
                     player.pawns_home += 1
                     break
-        elif self.counter > 52:
+        elif self.counter > 53:
             self.counter -= dice
         # self.rect.center = self.dict[self.counter]  
         # Khởi tạo animation path thay vì di chuyển trực tiếp

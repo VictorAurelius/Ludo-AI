@@ -165,7 +165,7 @@ def draw_sidebar(win, Statekpr):
         text = vn_font.render(f"{player.name}:", True, color)
         win.blit(text, (810, y_pos))
         
-        # Đếm số quân về đích (counter = 72)
+        # Đếm số quân về đích (counter = 52)
         finished = sum(1 for pawn in player.pawnlist if pawn.counter >= 52)
         text = vn_font.render(f"Về đích: {finished}", True, BLACK)
         win.blit(text, (820, y_pos + 30))
@@ -253,6 +253,18 @@ def main(player_names=None):
                     # Quân vừa hoàn thành animation, xử lý các hiệu ứng sau di chuyển
                     pawn.just_finished_animation = False
                     
+                    # Kiểm tra có quân nào của đối thủ ở vị trí mới không
+                    for other_player in Statekpr.players:
+                        if other_player != current_player:
+                            for other_pawn in other_player.pawnlist:
+                                if other_pawn.rect.center == new_pos:
+                                    # Đá quân về chuồng và tăng biến đếm số lần bị đá
+                                    other_pawn.counter = 0
+                                    other_pawn.rect.center = other_pawn.startpos
+                                    other_player.pawns -= 1
+                                    other_player.times_kicked += 1
+                                    break
+                                                
                     # Kiểm tra va chạm với sao
                     global alert_message, alert_time
                     got_roll_again = False  # Biến để kiểm tra có được tung lại không
@@ -393,7 +405,7 @@ def main(player_names=None):
                             can_move = True
                             
                         # Kích hoạt quân đã trên bàn có thể di chuyển
-                        elif pawn.counter > 0 and pawn.counter + dice_sum <= 52:
+                        elif pawn.counter > 0 and pawn.counter + dice_sum <= 53:
                             pawn.activepawn = True
                             can_move = True
                             
@@ -434,13 +446,13 @@ def main(player_names=None):
                             
                             # Trường hợp 1: Quân chưa từng được click (trong chuồng hoặc trên bàn)
                             if pawn.counter == 0:
-                                # Chỉ cho click khi tung được 6
+                                # Chỉ cho click khi tung được tổng lớn hơn hoặc bằng 10
                                 if (dice_num1 + dice_num2) >= 10:
                                     can_click = True
                             # Trường hợp 2: Quân đã từng được click (có thể click với bất kỳ số nào)
                             else:
                                 # Quân trên bàn và có thể di chuyển
-                                if pawn.counter > 0 and pawn.counter + (dice_num1 + dice_num2) <= 52:
+                                if pawn.counter > 0 and pawn.counter + (dice_num1 + dice_num2) <= 53:
                                     can_click = True
                             
                             if can_click:  # Chỉ xử lý khi can_click = True
@@ -457,6 +469,17 @@ def main(player_names=None):
                                     pawn.rect.center = pawn.dict[1]  # Đặt quân ở vị trí xuất phát
                                     current_player.pawns += 1  # Tăng số quân trên bàn
                                     valid_move = True
+                                    # Kiểm tra có quân nào của đối thủ ở vị trí mới không
+                                    for other_player in Statekpr.players:
+                                        if other_player != current_player:
+                                            for other_pawn in other_player.pawnlist:
+                                                if other_pawn.rect.center == new_pos:
+                                                    # Đá quân về chuồng và tăng biến đếm số lần bị đá
+                                                    other_pawn.counter = 0
+                                                    other_pawn.rect.center = other_pawn.startpos
+                                                    other_player.pawns -= 1
+                                                    other_player.times_kicked += 1
+                                                    break
                                     # Enable lại nút tung xúc xắc
                                     roll_button_enabled = True
                                         
@@ -482,20 +505,9 @@ def main(player_names=None):
                                     pawn.update_pawn_state(current_player, next_player)
                                     
                                 # Trường hợp 2: Di chuyển quân trên bàn (chỉ khi quân không phải vừa được xuất ra)
-                                elif pawn.counter > 0 and pawn.counter + dice_num1 + dice_num2 <= 52:
+                                elif pawn.counter > 0 and pawn.counter + dice_num1 + dice_num2 <= 53:
                                     # Lưu vị trí mới
                                     new_pos = pawn.dict[pawn.counter + dice_num1 + dice_num2]
-                                    # Kiểm tra có quân nào của đối thủ ở vị trí mới không
-                                    for other_player in Statekpr.players:
-                                        if other_player != current_player:
-                                            for other_pawn in other_player.pawnlist:
-                                                if other_pawn.rect.center == new_pos:
-                                                    # Đá quân về chuồng và tăng biến đếm số lần bị đá
-                                                    other_pawn.counter = 0
-                                                    other_pawn.rect.center = other_pawn.startpos
-                                                    other_player.pawns -= 1
-                                                    other_player.times_kicked += 1
-                                                    break
                                     
                                     # Bỏ chọn tất cả quân cờ khác
                                     for other_pawn in current_player.pawnlist:
@@ -506,52 +518,6 @@ def main(player_names=None):
                                     valid_move = True
                                     # Vô hiệu hóa nút tung xúc xắc trong khi animation đang chạy
                                     roll_button_enabled = False
-
-                                    # # Kiểm tra va chạm với sao
-                                    # global alert_message, alert_time
-                                    # got_roll_again = False  # Biến để kiểm tra có được tung lại không
-                                    # for star in stars:
-                                    #     if pawn.rect.colliderect(star.rect):
-                                    #         effect = star.apply_effect(pawn, Statekpr)
-                                    #         if effect == "roll_again":
-                                    #             alert_message = "Được tung xúc xắc thêm lần nữa!"
-                                    #             # Không chuyển lượt, cho phép tung xúc xắc lại
-                                    #             roll_button_enabled = True
-                                    #             got_roll_again = True
-                                    #         elif effect == "teleported":
-                                    #             alert_message = "Dịch chuyển đến vị trí ngẫu nhiên!"
-                                    #         else:  # effect == "died"
-                                    #             alert_message = "Quân cờ đã về chuồng!"
-                                                
-                                    #         alert_time = pygame.time.get_ticks()
-                                    #         break
-
-                                    # # Enable nút tung xúc xắc và chuyển lượt (nếu không được tung lại)
-                                    # roll_button_enabled = True
-                                    # if valid_move and not got_roll_again:
-                                    #     # Enable lại nút tung xúc xắc
-                                    #     roll_button_enabled = True
-                                        
-                                    #     # Xác định và chuyển lượt sang người chơi tiếp theo
-                                    #     if Statekpr.redTurn:
-                                    #         Statekpr.redTurn = False
-                                    #         Statekpr.blueTurn = True
-                                    #         next_player = Statekpr.playerBlue
-                                    #     elif Statekpr.blueTurn:
-                                    #         Statekpr.blueTurn = False
-                                    #         Statekpr.yellowTurn = True
-                                    #         next_player = Statekpr.playerYellow
-                                    #     elif Statekpr.yellowTurn:
-                                    #         Statekpr.yellowTurn = False
-                                    #         Statekpr.greenTurn = True
-                                    #         next_player = Statekpr.playerGreen
-                                    #     elif Statekpr.greenTurn:
-                                    #         Statekpr.greenTurn = False
-                                    #         Statekpr.redTurn = True
-                                    #         next_player = Statekpr.playerRed
-                                            
-                                    #     # Cập nhật trạng thái quân cờ
-                                    #     pawn.update_pawn_state(current_player, next_player)
                             break  # Đặt break ra ngoài, chỉ thoát khỏi vòng lặp sau khi kiểm tra xong
        
         # Vẽ sao

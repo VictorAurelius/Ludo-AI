@@ -28,9 +28,12 @@ class MainBoard:
             u"2. Tung 2 con xúc xắc để di chuyển quân",
             u"3. Cần tung được tổng 2 con xúc xắc >= 10 để đưa",
             u"    quân vào bàn cờ",
-            u"4. Quân có thể đá quân địch về vị trí xuất phát",
+            u"4. Quân có thể đá quân địch về chuồng nếu đứng cùng",
+            u"    ô với quân địch",
             u"5. Người chơi phải đưa tất cả quân về đích để thắng",
-            u"6. Quân di chuyển số ô bằng tổng 2 con xúc xắc"
+            u"6. Quân di chuyển số ô bằng tổng 2 con xúc xắc",
+            u"(Nếu khoảng cách từ quân đến đích nhỏ hơn 1 so với",
+            u"  tổng số xúc xắc thì quân đó vẫn có thể về đích)"
         ]
         self.rules_text = rules_text_unicode
 
