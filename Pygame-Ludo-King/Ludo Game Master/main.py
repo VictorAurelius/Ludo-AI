@@ -43,6 +43,7 @@ font = pygame.font.Font(None, 32)
 # Các nút trong sidebar
 roll_button = pygame.Rect(810, 330, 180, 50)
 title_button = pygame.Rect(820, 10, 160, 40)
+title_ranking_button = pygame.Rect(400, 400, 200, 50)
 
 # Các biến toàn cục
 roll_button_enabled = True  # Trạng thái nút tung xúc xắc
@@ -62,6 +63,9 @@ star_effect_message = ""
 star_effect_time = 0
 alert_message = ""
 alert_time = 0
+
+# Biến để lưu thứ tự về đích
+finished_players = []
 
 def draw_alert(win, text):
     # Tạo surface bán trong suốt cho background
@@ -180,6 +184,37 @@ def draw_sidebar(win, Statekpr):
         # Đặt thông báo ở dưới thông tin người chơi
         win.blit(text, (810, y_pos + 20))
 
+def draw_ranking(win):
+    """Vẽ bảng xếp hạng"""
+    # Vẽ background mờ
+    s = pygame.Surface((1000, 800))
+    s.set_alpha(128)
+    s.fill((0, 0, 0))
+    win.blit(s, (0, 0))
+    
+    # Vẽ bảng xếp hạng
+    ranking_rect = pygame.Rect(300, 100, 400, 400)
+    pygame.draw.rect(win, WHITE, ranking_rect)
+    pygame.draw.rect(win, BLACK, ranking_rect, 2)
+    
+    # Vẽ tiêu đề
+    vn_font = pygame.font.SysFont("segoeui", 36)
+    title = vn_font.render("BẢNG XẾP HẠNG", True, BLACK)
+    win.blit(title, (400, 120))
+    
+    # Vẽ danh sách người chơi
+    y_pos = 180
+    for i, player in enumerate(finished_players, 1):
+        color = COLORS[player.color]
+        text = vn_font.render(f"Hạng {i}: {player.name}", True, color)
+        win.blit(text, (320, y_pos))
+        y_pos += 60
+    
+    # Vẽ nút Tiêu đề
+    pygame.draw.rect(win, BLACK, title_ranking_button, 2)
+    title_text = vn_font.render(u"Tiêu đề", True, BLACK)
+    win.blit(title_text, (450, 410))
+    
 # MainFunction
 # Animation constants
 DICE_ANIMATION_FRAMES = 15  # Number of frames for animation
@@ -189,7 +224,8 @@ def main(player_names=None):
     # Khởi tạo lại Pygame display (quan trọng)
     pygame.display.set_mode((1000, 800))
     # Declare globals at the start of function
-    global current_dice1, current_dice2, roll_button_enabled, dice_num1, dice_num2, can_move, showing_dialog, dice_animating, display_player
+    global current_dice1, current_dice2, roll_button_enabled, dice_num1, dice_num2, can_move, showing_dialog, dice_animating, display_player, finished_players
+    finished_players = []
     
     # Reset dialog state
     showing_dialog = False
@@ -255,7 +291,10 @@ def main(player_names=None):
                         # Tìm người chơi sở hữu quân này và tăng pawns_home
                         for player in Statekpr.players:
                             if pawn in player.pawnlist:
-                                player.pawns_home += 1
+                                player.pawns_home += 4
+                                # Kiểm tra nếu người chơi vừa về đích hết và chưa có trong danh sách
+                                if player.pawns_home == 4 and player not in finished_players:
+                                    finished_players.append(player)
                                 break
                     # Lấy vị trí hiện tại làm new_pos
                     new_pos = pawn.rect.center
@@ -298,29 +337,13 @@ def main(player_names=None):
                         roll_button_enabled = True
                                         
                         # Xác định và chuyển lượt sang người chơi tiếp theo
-                        if Statekpr.redTurn:
-                            Statekpr.redTurn = False
-                            Statekpr.blueTurn = True
-                            next_player = Statekpr.playerBlue
-                        elif Statekpr.blueTurn:
-                            Statekpr.blueTurn = False
-                            Statekpr.yellowTurn = True
-                            next_player = Statekpr.playerYellow
-                        elif Statekpr.yellowTurn:
-                            Statekpr.yellowTurn = False
-                            Statekpr.greenTurn = True
-                            next_player = Statekpr.playerGreen
-                        elif Statekpr.greenTurn:
-                            Statekpr.greenTurn = False
-                            Statekpr.redTurn = True
-                            next_player = Statekpr.playerRed
+                        Statekpr.find_next_valid_player()
                         
                         # Cập nhật người chơi hiển thị sau khi chuyển lượt
                         Statekpr.update_display_player()
                             
-                    # Cập nhật trạng thái quân cờ
-                    pawn.update_pawn_state(current_player, next_player)
-        
+                # Kiểm tra điều kiện hiển thị bảng xếp hạng
+                showing_ranking = len(finished_players) >= 3
         # Update dice animation
         if dice_animating:
             current_time = pygame.time.get_ticks()
@@ -358,6 +381,11 @@ def main(player_names=None):
             if event.type == MOUSEBUTTONDOWN and not any_pawn_animating:  # Chỉ cho phép click khi không có animation
                 mouse_pos = event.pos
                 
+                if showing_ranking:
+                    #Kiểm tra click vào nút Tiêu đề trong bảng xếp hạng
+                    if title_ranking_button.collidepoint(mouse_pos):
+                        mainLoop = False
+                        return None
                 # Xử lý dialog nếu đang hiển thị
                 if showing_dialog:
                     if yes_button.collidepoint(mouse_pos):
@@ -422,18 +450,7 @@ def main(player_names=None):
                     if not can_move:
                         # Không có nước đi hợp lệ, chuyển lượt và giữ nút enable
                         roll_button_enabled = True
-                        if Statekpr.redTurn:
-                            Statekpr.redTurn = False
-                            Statekpr.blueTurn = True
-                        elif Statekpr.blueTurn:
-                            Statekpr.blueTurn = False
-                            Statekpr.yellowTurn = True
-                        elif Statekpr.yellowTurn:
-                            Statekpr.yellowTurn = False
-                            Statekpr.greenTurn = True
-                        elif Statekpr.greenTurn:
-                            Statekpr.greenTurn = False
-                            Statekpr.redTurn = True
+                        Statekpr.find_next_valid_player()
                 
                 # Kiểm tra click vào quân cờ khi nút tung xúc xắc đang disable
                 if not roll_button_enabled:
@@ -496,24 +513,72 @@ def main(player_names=None):
                                         
                                     # Xác định và chuyển lượt sang người chơi tiếp theo
                                     if Statekpr.redTurn:
-                                        Statekpr.redTurn = False
-                                        Statekpr.blueTurn = True
-                                        next_player = Statekpr.playerBlue
+                                        # Kiểm tra Blue
+                                        if Statekpr.playerBlue.pawns_home < 4:
+                                            Statekpr.redTurn = False
+                                            Statekpr.blueTurn = True
+                                        # Kiểm tra Yellow
+                                        elif Statekpr.playerYellow.pawns_home < 4:
+                                            Statekpr.redTurn = False
+                                            Statekpr.yellowTurn = True
+                                        # Kiểm tra Green
+                                        elif Statekpr.playerGreen.pawns_home < 4:
+                                            Statekpr.redTurn = False
+                                            Statekpr.greenTurn = True
+                                        # Nếu tất cả đã về đích, quay lại Red
+                                        else:
+                                            Statekpr.redTurn = True
+                                        
                                     elif Statekpr.blueTurn:
-                                        Statekpr.blueTurn = False
-                                        Statekpr.yellowTurn = True
-                                        next_player = Statekpr.playerYellow
+                                        # Kiểm tra Yellow
+                                        if Statekpr.playerYellow.pawns_home < 4:
+                                            Statekpr.blueTurn = False
+                                            Statekpr.yellowTurn = True
+                                        # Kiểm tra Green
+                                        elif Statekpr.playerGreen.pawns_home < 4:
+                                            Statekpr.blueTurn = False
+                                            Statekpr.greenTurn = True
+                                        # Kiểm tra Red
+                                        elif Statekpr.playerRed.pawns_home < 4:
+                                            Statekpr.blueTurn = False
+                                            Statekpr.redTurn = True
+                                        # Nếu tất cả đã về đích, quay lại Blue
+                                        else:
+                                            Statekpr.blueTurn = True
+                                        
                                     elif Statekpr.yellowTurn:
-                                        Statekpr.yellowTurn = False
-                                        Statekpr.greenTurn = True
-                                        next_player = Statekpr.playerGreen
+                                        # Kiểm tra Green
+                                        if Statekpr.playerGreen.pawns_home < 4:
+                                            Statekpr.yellowTurn = False
+                                            Statekpr.greenTurn = True
+                                        # Kiểm tra Red
+                                        elif Statekpr.playerRed.pawns_home < 4:
+                                            Statekpr.yellowTurn = False
+                                            Statekpr.redTurn = True
+                                        # Kiểm tra Blue
+                                        elif Statekpr.playerBlue.pawns_home < 4:
+                                            Statekpr.yellowTurn = False
+                                            Statekpr.blueTurn = True
+                                        # Nếu tất cả đã về đích, quay lại Yellow
+                                        else:
+                                            Statekpr.yellowTurn = True
+                                        
                                     elif Statekpr.greenTurn:
-                                        Statekpr.greenTurn = False
-                                        Statekpr.redTurn = True
-                                        next_player = Statekpr.playerRed
-                                            
-                                    # Cập nhật trạng thái quân cờ
-                                    pawn.update_pawn_state(current_player, next_player)
+                                        # Kiểm tra Red
+                                        if Statekpr.playerRed.pawns_home < 4:
+                                            Statekpr.greenTurn = False
+                                            Statekpr.redTurn = True
+                                        # Kiểm tra Blue
+                                        elif Statekpr.playerBlue.pawns_home < 4:
+                                            Statekpr.greenTurn = False
+                                            Statekpr.blueTurn = True
+                                        # Kiểm tra Yellow
+                                        elif Statekpr.playerYellow.pawns_home < 4:
+                                            Statekpr.greenTurn = False
+                                            Statekpr.yellowTurn = True
+                                        # Nếu tất cả đã về đích, quay lại Green
+                                        else:
+                                            Statekpr.greenTurn = True
                                     Statekpr.update_display_player()
                                     
                                 # Trường hợp 2: Di chuyển quân trên bàn (chỉ khi quân không phải vừa được xuất ra)
@@ -548,6 +613,9 @@ def main(player_names=None):
         # Vẽ dialog nếu đang hiển thị
         if showing_dialog:
             draw_dialog(win)
+            
+        if showing_ranking:
+            draw_ranking(win)
             
         pygame.display.flip()
 

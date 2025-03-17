@@ -146,6 +146,76 @@ class Statekeep:
             self.display_player = self.playerYellow
         elif self.greenTurn:
             self.display_player = self.playerGreen
+    
+    # Hàm helper để tìm người chơi tiếp theo chưa về đích
+    def find_next_valid_player(self):
+        if self.redTurn:
+            # Kiểm tra Blue
+            if self.playerBlue.pawns_home < 4:
+                self.redTurn = False
+                self.blueTurn = True
+            # Kiểm tra Yellow
+            elif self.playerYellow.pawns_home < 4:
+                self.redTurn = False
+                self.yellowTurn = True
+            # Kiểm tra Green
+            elif self.playerGreen.pawns_home < 4:
+                self.redTurn = False
+                self.greenTurn = True
+            # Nếu tất cả đã về đích, quay lại Red
+            else:
+                self.redTurn = True
+            
+        elif self.blueTurn:
+            # Kiểm tra Yellow
+            if self.playerYellow.pawns_home < 4:
+                self.blueTurn = False
+                self.yellowTurn = True
+            # Kiểm tra Green
+            elif self.playerGreen.pawns_home < 4:
+                self.blueTurn = False
+                self.greenTurn = True
+            # Kiểm tra Red
+            elif self.playerRed.pawns_home < 4:
+                self.blueTurn = False
+                self.redTurn = True
+            # Nếu tất cả đã về đích, quay lại Blue
+            else:
+                self.blueTurn = True
+            
+        elif self.yellowTurn:
+            # Kiểm tra Green
+            if self.playerGreen.pawns_home < 4:
+                self.yellowTurn = False
+                self.greenTurn = True
+            # Kiểm tra Red
+            elif self.playerRed.pawns_home < 4:
+                self.yellowTurn = False
+                self.redTurn = True
+            # Kiểm tra Blue
+            elif self.playerBlue.pawns_home < 4:
+                self.yellowTurn = False
+                self.blueTurn = True
+            # Nếu tất cả đã về đích, quay lại Yellow
+            else:
+                self.yellowTurn = True
+            
+        elif self.greenTurn:
+            # Kiểm tra Red
+            if self.playerRed.pawns_home < 4:
+                self.greenTurn = False
+                self.redTurn = True
+            # Kiểm tra Blue
+            elif self.playerBlue.pawns_home < 4:
+                self.greenTurn = False
+                self.blueTurn = True
+            # Kiểm tra Yellow
+            elif self.playerYellow.pawns_home < 4:
+                self.greenTurn = False
+                self.yellowTurn = True
+            # Nếu tất cả đã về đích, quay lại Green
+            else:
+                self.greenTurn = True
 
    
     
