@@ -11,8 +11,8 @@ from pytmx.util_pygame import load_pygame
 pygame.init()
 
 # window dimension coordinates in pixels
-winX = 1000  # Tăng chiều rộng để thêm sidebar
-winY = 800
+winX = 1128  # Tăng chiều rộng để thêm sidebar
+winY = 928
 sidebarX = 200  # Chiều rộng của sidebar
 
 # set and initialize the pygame display
