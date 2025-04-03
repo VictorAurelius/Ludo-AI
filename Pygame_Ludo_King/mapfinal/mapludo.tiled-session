@@ -1,0 +1,162 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "mapludo.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "02.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "13.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "16.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "17.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "18.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Bridge_All.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Button_Blue_9Slides.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Button_Hover_9Slides.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Castle_Blue.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Castle_Purple.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Castle_Red.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Castle_Yellow.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Foam1.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Happy_Sheep1.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Rocks1.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Star.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Tilemap_Elevation.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Tilemap_Flat.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Tower_Blue.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Tower_Purple.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Tower_Red.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Tower_Yellow.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Tree1.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Warrior_Blue1.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Warrior_Yellow1.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Water.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "mapludo.tmx": {
+            "scale": 1,
+            "selectedLayer": 12,
+            "viewCenter": {
+                "x": 418,
+                "y": 319
+            }
+        },
+        "o_di_chuyen.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.imagePath": "C:/Users/nhat6/OneDrive/Documents/AI/BTL/Ludo-AI/Pygame_Ludo_King/img",
+    "map.height": 29,
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 25,
+    "map.tileWidth": 25,
+    "map.width": 29,
+    "openFiles": [
+        "mapludo.tmx",
+        "Warrior_Blue1.tsx",
+        "Warrior_Yellow1.tsx",
+        "Star.tsx"
+    ],
+    "project": "mapludo.tiled-project",
+    "recentFiles": [
+        "Star.tsx",
+        "Warrior_Yellow1.tsx",
+        "Warrior_Blue1.tsx",
+        "mapludo.tmx",
+        "Rocks1.tsx",
+        "Happy_Sheep1.tsx",
+        "Tree1.tsx",
+        "18.tsx",
+        "02.tsx",
+        "13.tsx",
+        "17.tsx",
+        "16.tsx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.margin": 0,
+    "tileset.spacing": 0,
+    "tileset.tileSize": {
+        "height": 25,
+        "width": 25
+    }
+}

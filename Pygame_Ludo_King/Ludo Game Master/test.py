@@ -2,10 +2,10 @@ import pygame
 from pytmx.util_pygame import load_pygame
 
 pygame.init()
-screen = pygame.display.set_mode((928, 928))
+screen = pygame.display.set_mode((800, 800))
 
 # Load tile map
-tiled_map = load_pygame('map/mapludo.tmx')
+tiled_map = load_pygame('mapfinal/mapludo.tmx')
 
 # Vẽ từng tile lên màn hình
 for layer in tiled_map.visible_layers:

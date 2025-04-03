@@ -5,14 +5,15 @@ from States import *
 from Stars import stars
 import pygame
 import pytmx
+import os
 from main_board import MainBoard
 from pytmx.util_pygame import load_pygame
 # Pygame Initialized
 pygame.init()
 
 # window dimension coordinates in pixels
-winX = 1128  # Tăng chiều rộng để thêm sidebar
-winY = 928
+winX = 925  # Tăng chiều rộng để thêm sidebar
+winY = 725
 sidebarX = 200  # Chiều rộng của sidebar
 
 # set and initialize the pygame display
@@ -42,8 +43,8 @@ COLORS = {
 font = pygame.font.Font(None, 32)
 
 # Các nút trong sidebar
-roll_button = pygame.Rect(810, 330, 180, 50)
-title_button = pygame.Rect(820, 10, 160, 40)
+roll_button = pygame.Rect(735, 290, 180, 50)
+title_button = pygame.Rect(745, 10, 160, 40)
 title_ranking_button = pygame.Rect(400, 400, 200, 50)
 
 # Các biến toàn cục
@@ -87,24 +88,27 @@ def draw_alert(win, text):
 
 #load the board background
 def load_map():
-    # Load map từ file TMX 
-    game_map = load_pygame('map/mapludo.tmx')
+    # Tạo surface mới có kích thước bằng với cửa sổ game
+    map_surface = pygame.Surface((725, 725))
     
-    # Vẽ từng layer của map
+    # Load map từ file TMX 
+    game_map = load_pygame('mapfinal/mapludo.tmx')
+    
+    # Vẽ từng layer của map lên surface mới
     for layer in game_map.visible_layers:
         for x, y, gid in layer:
             tile = game_map.get_tile_image_by_gid(gid)
             if tile:
-                win.blit(tile, (x * game_map.tilewidth, y * game_map.tileheight))
-    pygame.display.update()
-    return win
+                map_surface.blit(tile, (x * game_map.tilewidth, y * game_map.tileheight))
+    
+    return map_surface  # Trả về surface đã vẽ map
 
 # Khởi tạo bàn cờ từ Tiled
 bgBoard = load_map()
 
 def draw_dialog(win):
     # Vẽ background mờ
-    s = pygame.Surface((1000, 800))
+    s = pygame.Surface((925, 725))
     s.set_alpha(128)
     s.fill((0, 0, 0))
     win.blit(s, (0, 0))
@@ -133,19 +137,19 @@ def draw_sidebar(win, Statekpr):
     global star_effect_message, star_effect_time, dice_animating
     
     # Vẽ background cho sidebar
-    pygame.draw.rect(win, WHITE, (800, 0, 200, 800))
+    pygame.draw.rect(win, WHITE, (725, 0, 200, 725))
     
     # Font cho tiếng Việt
-    vn_font = pygame.font.SysFont("segoeui", 32)
+    vn_font = pygame.font.SysFont("segoeui", 20)
     
     # Vẽ nút Tiêu đề
     pygame.draw.rect(win, BLACK, title_button, 2)
     title_text = vn_font.render(u"Tiêu đề", True, BLACK)
-    win.blit(title_text, (850, 12))
+    win.blit(title_text, (790, 15))
     
     # Hiển thị người chơi đang đến lượt
     text = vn_font.render(u"Lượt của:", True, BLACK)
-    win.blit(text, (810, 80))
+    win.blit(text, (735, 60))
     
     # Nếu display_player chưa được khởi tạo, khởi tạo ban đầu dựa trên lượt
     if Statekpr.display_player is None:
@@ -154,7 +158,7 @@ def draw_sidebar(win, Statekpr):
     # Hiển thị tên người chơi hiện tại
     color = COLORS[Statekpr.display_player.color]
     text = vn_font.render(Statekpr.display_player.name, True, color)
-    win.blit(text, (810, 110))
+    win.blit(text, (735, 90))
     
     # Vẽ nút tung xúc xắc
     button_color = GRAY
@@ -162,34 +166,34 @@ def draw_sidebar(win, Statekpr):
         button_color = (100, 100, 100)  # Tối màu khi disable hoặc đang animation
     pygame.draw.rect(win, button_color, roll_button)
     text = vn_font.render(u"Tung xúc xắc", True, WHITE)
-    win.blit(text, (820, 335))
+    win.blit(text, (770, 298))
     
     # Hiển thị 2 hình xúc xắc
     scaled_dice1 = pygame.transform.scale(current_dice1, (80, 80))
     scaled_dice2 = pygame.transform.scale(current_dice2, (80, 80))
-    win.blit(scaled_dice1, (820, 180))
-    win.blit(scaled_dice2, (910, 180))
+    win.blit(scaled_dice1, (745, 140))
+    win.blit(scaled_dice2, (835, 140))
     
     # Hiển thị tổng hai xúc xắc CHỈ KHI ANIMATION KẾT THÚC
     if not dice_animating:  # Chỉ hiển thị khi animation kết thúc
         total = dice_num1 + dice_num2
         total_text = vn_font.render(f"Tổng: {total}", True, BLACK)
-        win.blit(total_text, (850, 270))
+        win.blit(total_text, (790, 233))
     
     # Hiển thị thông tin quân cờ của từng người chơi
-    y_pos = 400
+    y_pos = 360
     for player in Statekpr.players:
         color = COLORS[player.color]
         text = vn_font.render(f"{player.name}:", True, color)
-        win.blit(text, (810, y_pos))
+        win.blit(text, (735, y_pos))
         
         # Đếm số quân về đích (counter = 52)
         text = vn_font.render(f"Về đích: {player.pawns_home}", True, BLACK)
-        win.blit(text, (820, y_pos + 30))
+        win.blit(text, (745, y_pos + 30))
         
         # Hiển thị số lần bị đá
         text = vn_font.render(f"Bị đá: {player.times_kicked}", True, BLACK)
-        win.blit(text, (820, y_pos + 55))
+        win.blit(text, (745, y_pos + 55))
         
         y_pos += 90
     
@@ -197,12 +201,12 @@ def draw_sidebar(win, Statekpr):
     if star_effect_message and pygame.time.get_ticks() - star_effect_time < 2000:
         text = vn_font.render(star_effect_message, True, (255, 215, 0))  # Màu vàng
         # Đặt thông báo ở dưới thông tin người chơi
-        win.blit(text, (810, y_pos + 20))
+        win.blit(text, (735, y_pos + 20))
 
 def draw_ranking(win):
     """Vẽ bảng xếp hạng"""
     # Vẽ background mờ
-    s = pygame.Surface((1000, 800))
+    s = pygame.Surface((925, 725))
     s.set_alpha(128)
     s.fill((0, 0, 0))
     win.blit(s, (0, 0))
@@ -236,8 +240,24 @@ DICE_ANIMATION_FRAMES = 15  # Number of frames for animation
 DICE_ANIMATION_SPEED = 50   # Milliseconds between frames
 
 def main(player_names=None):
+    # Lấy thông tin về độ phân giải màn hình
+    info = pygame.display.Info()
+    screen_width = info.current_w
+    screen_height = info.current_h
+    
+    # Tính toán tọa độ để cửa sổ xuất hiện ở giữa màn hình
+    pos_x = (screen_width - winX) // 2
+    pos_y = (screen_height - winY) // 2
+    
+    # Đặt vị trí cửa sổ vào giữa màn hình
+    os.environ['SDL_VIDEO_WINDOW_POS'] = f"{pos_x},{pos_y}"
+    
     # Khởi tạo lại Pygame display (quan trọng)
-    pygame.display.set_mode((1000, 800))
+    win = pygame.display.set_mode((winX, winY))
+    pygame.display.set_caption("Ludo Game")  # Đặt tiêu đề cho cửa sổ
+    
+    # Khởi tạo lại Pygame display (quan trọng)
+    pygame.display.set_mode((925, 725))
     # Declare globals at the start of function
     global current_dice1, current_dice2, roll_button_enabled, dice_num1, dice_num2, can_move, showing_dialog, dice_animating, display_player, finished_players
     finished_players = []
@@ -279,9 +299,6 @@ def main(player_names=None):
     mainLoop = True
     #main game loop
     while mainLoop:
-        # Clear screen
-        win.fill((255, 255, 255))
-    
         # Vẽ map từ Tiled
         win.blit(bgBoard, (0,0))
         #Set clock Tick
@@ -305,7 +322,7 @@ def main(player_names=None):
                     # Quân vừa hoàn thành animation, xử lý các hiệu ứng sau di chuyển
                     pawn.just_finished_animation = False
                     # Kiểm tra nếu quân đã về đích (counter = 52 hoặc 53) để tăng số quân về đích
-                    if pawn.counter == 52 or pawn.counter == 53:
+                    if pawn.counter == 96 or pawn.counter == 97:
                         # Tìm người chơi sở hữu quân này và tăng pawns_home
                         for player in Statekpr.players:
                             if pawn in player.pawnlist:
@@ -332,7 +349,7 @@ def main(player_names=None):
                     global alert_message, alert_time
                     got_roll_again = False  # Biến để kiểm tra có được tung lại không
                     for star in stars:
-                        if pawn.rect.colliderect(star.rect):
+                        if star.check_exact_collision(pawn):
                             effect = star.apply_effect(pawn, Statekpr)
                             if effect == "roll_again":
                                 alert_message = "Được tung xúc xắc thêm lần nữa!"
@@ -341,6 +358,15 @@ def main(player_names=None):
                                 got_roll_again = True
                             elif effect == "teleported":
                                 alert_message = "Dịch chuyển đến vị trí ngẫu nhiên!"
+                                if pawn.counter == 96 or pawn.counter == 97:
+                                    # Tìm người chơi sở hữu quân này và tăng pawns_home
+                                    for player in Statekpr.players:
+                                        if pawn in player.pawnlist:
+                                            player.pawns_home += 4
+                                            # Kiểm tra nếu người chơi vừa về đích hết và chưa có trong danh sách
+                                            if player.pawns_home == 4 and player not in finished_players:
+                                                finished_players.append(player)
+                                            break
                             else:  # effect == "died"
                                 alert_message = "Quân cờ đã về chuồng!"
                                                     
@@ -461,7 +487,7 @@ def main(player_names=None):
                             can_move = True
                             
                         # Kích hoạt quân đã trên bàn có thể di chuyển
-                        elif pawn.counter > 0 and pawn.counter + dice_sum <= 53:
+                        elif pawn.counter > 0 and pawn.counter + dice_sum <= 97:
                             pawn.activepawn = True
                             can_move = True
                             
@@ -497,7 +523,7 @@ def main(player_names=None):
                             # Trường hợp 2: Quân đã từng được click (có thể click với bất kỳ số nào)
                             else:
                                 # Quân trên bàn và có thể di chuyển
-                                if pawn.counter > 0 and pawn.counter + (dice_num1 + dice_num2) <= 53:
+                                if pawn.counter > 0 and pawn.counter + (dice_num1 + dice_num2) <= 97:
                                     can_click = True
                             
                             if can_click:  # Chỉ xử lý khi can_click = True
@@ -600,7 +626,7 @@ def main(player_names=None):
                                     Statekpr.update_display_player()
                                     
                                 # Trường hợp 2: Di chuyển quân trên bàn (chỉ khi quân không phải vừa được xuất ra)
-                                elif pawn.counter > 0 and pawn.counter + dice_num1 + dice_num2 <= 53:
+                                elif pawn.counter > 0 and pawn.counter + dice_num1 + dice_num2 <= 97:
                                     # Lưu vị trí mới
                                     new_pos = pawn.dict[pawn.counter + dice_num1 + dice_num2]
                                     

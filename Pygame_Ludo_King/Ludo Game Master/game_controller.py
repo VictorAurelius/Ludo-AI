@@ -3,9 +3,25 @@ import sys
 from main_board import MainBoard
 import importlib
 import gc
+import os
 
 def run_game():
     pygame.init()
+    # Lấy thông tin màn hình
+    info = pygame.display.Info()
+    screen_width = info.current_w
+    screen_height = info.current_h
+    
+    # Kích thước cửa sổ game
+    winX = 925
+    winY = 725
+    
+    # Căn giữa cửa sổ
+    pos_x = (screen_width - winX) // 2
+    pos_y = (screen_height - winY) // 2
+    
+    # Đặt vị trí cửa sổ
+    os.environ['SDL_VIDEO_WINDOW_POS'] = f"{pos_x},{pos_y}"
     
     while True:
         try:
@@ -26,6 +42,8 @@ def run_game():
                         del sys.modules['Pawns']
                     if 'States' in sys.modules:
                         del sys.modules['States']
+                    if 'Stars' in sys.modules:
+                        del sys.modules['Stars']
                         
                     # Chạy garbage collector để giải phóng bộ nhớ
                     gc.collect()
