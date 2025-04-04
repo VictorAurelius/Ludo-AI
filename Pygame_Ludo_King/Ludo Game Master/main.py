@@ -547,12 +547,12 @@ def main(player_names=None):
                         if pawn.rect.collidepoint(mouse_pos):
                             # Kiểm tra điều kiện được phép click
                             can_click = False
+                            position_blocked = False
                             
                             # Trường hợp 1: Quân chưa từng được click (trong chuồng hoặc trên bàn)
                             if pawn.counter == 0:
                                 # Kiểm tra vị trí xuất phát có quân cùng màu không
                                 start_position = pawn.dict[1]
-                                position_blocked = False
                                 for other_pawn in current_player.pawnlist:
                                     if other_pawn != pawn and other_pawn.rect.center == start_position:
                                         position_blocked = True
@@ -560,11 +560,13 @@ def main(player_names=None):
                                 # Chỉ cho click khi tung được tổng lớn hơn hoặc bằng 10
                                 if (dice_num1 + dice_num2) >= 10 and not position_blocked:
                                     can_click = True
+                                elif (dice_num1 + dice_num2) < 10:
+                                    position_blocked = False
+                                
                             # Trường hợp 2: Quân đã từng được click (có thể click với bất kỳ số nào)
                             else:
                                 # Kiểm tra vị trí đích có quân cùng màu không
                                 target_position = pawn.dict[pawn.counter + dice_num1 + dice_num2]
-                                position_blocked = False
                                 for other_pawn in current_player.pawnlist:
                                     if other_pawn != pawn and other_pawn.rect.center == target_position:
                                         position_blocked = True
@@ -688,7 +690,7 @@ def main(player_names=None):
                                     # Vô hiệu hóa nút tung xúc xắc trong khi animation đang chạy
                                     roll_button_enabled = False
 
-                            if not can_click and position_blocked:
+                            if position_blocked:
                                 # Hiển thị thông báo nếu click vào quân không thể di chuyển do bị chặn
                                 alert_manager.add_alert("Đã có quân của bạn ở đó!", 2000)
                             
