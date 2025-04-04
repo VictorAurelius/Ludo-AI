@@ -44,6 +44,8 @@ def run_game():
                         del sys.modules['States']
                     if 'Stars' in sys.modules:
                         del sys.modules['Stars']
+                    if 'alert_manager' in sys.modules:  # Thêm dòng này để reload AlertManager
+                        del sys.modules['alert_manager']
                         
                     # Chạy garbage collector để giải phóng bộ nhớ
                     gc.collect()

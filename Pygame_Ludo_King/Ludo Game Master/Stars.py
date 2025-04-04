@@ -170,7 +170,11 @@ positions = {
     105: (15, 26),
     106: (15, 25),
     107: (15, 24),
-    108: (15, 23)
+    108: (15, 23),
+    109: (3, 14),
+    110: (3, 13),
+    111: (3, 12),
+    112: (3, 11)
 }
 
 # Tạo list vị trí có thể đặt sao
@@ -180,7 +184,7 @@ for pos, coord in positions.items():
         available_positions.append(coord)
 
 # Chọn ngẫu nhiên 8 vị trí để đặt sao
-star_positions = random.sample(available_positions, 12)
+star_positions = random.sample(available_positions, 80)
 
 # Tạo list chứa các đối tượng Star
 stars = pygame.sprite.Group()

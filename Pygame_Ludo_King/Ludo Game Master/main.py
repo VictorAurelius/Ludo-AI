@@ -8,8 +8,11 @@ import pytmx
 import os
 from main_board import MainBoard
 from pytmx.util_pygame import load_pygame
+from alert_manager import AlertManager
 # Pygame Initialized
 pygame.init()
+
+alert_manager = AlertManager()
 
 # window dimension coordinates in pixels
 winX = 925  # Tăng chiều rộng để thêm sidebar
@@ -63,7 +66,6 @@ dice_num2 = 1  # Số hiện tại trên xúc xắc 2
 # Biến lưu thông báo hiệu ứng sao và alert
 star_effect_message = ""
 star_effect_time = 0
-alert_message = ""
 alert_time = 0
 
 # Biến để lưu thứ tự về đích
@@ -240,6 +242,8 @@ DICE_ANIMATION_FRAMES = 15  # Number of frames for animation
 DICE_ANIMATION_SPEED = 50   # Milliseconds between frames
 
 def main(player_names=None):
+    global alert_manager
+    
     # Lấy thông tin về độ phân giải màn hình
     info = pygame.display.Info()
     screen_width = info.current_w
@@ -346,32 +350,39 @@ def main(player_names=None):
                                     break
                                                 
                     # Kiểm tra va chạm với sao
-                    global alert_message, alert_time
                     got_roll_again = False  # Biến để kiểm tra có được tung lại không
-                    for star in stars:
-                        if star.check_exact_collision(pawn):
-                            effect = star.apply_effect(pawn, Statekpr)
-                            if effect == "roll_again":
-                                alert_message = "Được tung xúc xắc thêm lần nữa!"
-                                # Không chuyển lượt, cho phép tung xúc xắc lại
-                                roll_button_enabled = True
-                                got_roll_again = True
-                            elif effect == "teleported":
-                                alert_message = "Dịch chuyển đến vị trí ngẫu nhiên!"
-                                if pawn.counter == 96 or pawn.counter == 97:
-                                    # Tìm người chơi sở hữu quân này và tăng pawns_home
-                                    for player in Statekpr.players:
-                                        if pawn in player.pawnlist:
-                                            player.pawns_home += 4
-                                            # Kiểm tra nếu người chơi vừa về đích hết và chưa có trong danh sách
-                                            if player.pawns_home == 4 and player not in finished_players:
-                                                finished_players.append(player)
-                                            break
-                            else:  # effect == "died"
-                                alert_message = "Quân cờ đã về chuồng!"
-                                                    
-                            alert_time = pygame.time.get_ticks()
-                            break
+                    teleported = False  # Biến để đánh dấu quân vừa được dịch chuyển
+                    def check_star_collision(pawn):
+                        nonlocal got_roll_again, teleported
+                        for star in stars:
+                            if star.check_exact_collision(pawn):
+                                effect = star.apply_effect(pawn, Statekpr)
+                                if effect == "roll_again":
+                                    alert_manager.add_alert("Được tung xúc xắc thêm lần nữa!", 3000)
+                                    # Không chuyển lượt, cho phép tung xúc xắc lại
+                                    roll_button_enabled = True
+                                    got_roll_again = True
+                                elif effect == "teleported":
+                                    alert_manager.add_alert("Dịch chuyển đến vị trí ngẫu nhiên!", 3000)
+                                    teleported = True
+                                    if pawn.counter == 96 or pawn.counter == 97:
+                                        # Tìm người chơi sở hữu quân này và tăng pawns_home
+                                        for player in Statekpr.players:
+                                            if pawn in player.pawnlist:
+                                                player.pawns_home += 4
+                                                # Kiểm tra nếu người chơi vừa về đích hết và chưa có trong danh sách
+                                                if player.pawns_home == 4 and player not in finished_players:
+                                                    finished_players.append(player)
+                                                break
+                                    # Kiểm tra nếu vị trí mới có sao không
+                                    check_star_collision(pawn)
+                                else:  # effect == "died"
+                                    alert_manager.add_alert("Quân cờ đã về chuồng!", 3000)
+                                return True
+                        return False
+                    
+                    # Kiểm tra va chạm với sao ban đầu
+                    star_hit = check_star_collision(pawn)
                     
                     # Nếu không có sao, xử lý kết thúc lượt
                     if roll_button_enabled == False:
@@ -388,6 +399,10 @@ def main(player_names=None):
                             
                 # Kiểm tra điều kiện hiển thị bảng xếp hạng
                 showing_ranking = len(finished_players) >= 3
+        
+        # Cập nhật danh sách thông báo
+        alert_manager.update()
+        
         # Update dice animation
         if dice_animating:
             current_time = pygame.time.get_ticks()
@@ -483,13 +498,31 @@ def main(player_names=None):
                     for pawn in current_player.pawnlist:
                         # Kích hoạt quân trong chuồng nếu tổng >= 10
                         if pawn.counter == 0 and dice_sum >= 10:
-                            pawn.activepawn = True
-                            can_move = True
+                            # Kiểm tra xem vị trí xuất phát đã có quân cùng màu không
+                            position_blocked = False
+                            start_position = pawn.dict[1]
+                            for other_pawn in current_player.pawnlist:
+                                if other_pawn != pawn and other_pawn.rect.center == start_position:
+                                    position_blocked = True
+                                    break
+                            
+                            if not position_blocked:
+                                pawn.activepawn = True
+                                can_move = True
                             
                         # Kích hoạt quân đã trên bàn có thể di chuyển
                         elif pawn.counter > 0 and pawn.counter + dice_sum <= 97:
-                            pawn.activepawn = True
-                            can_move = True
+                            # Kiểm tra vị trí đích có quân cùng màu không
+                            position_blocked = False
+                            target_position = pawn.dict[pawn.counter + dice_sum]
+                            for other_pawn in current_player.pawnlist:
+                                if other_pawn != pawn and other_pawn.rect.center == target_position:
+                                    position_blocked = True
+                                    break
+                            
+                            if not position_blocked:
+                                pawn.activepawn = True
+                                can_move = True
                             
                     if not can_move:
                         # Không có nước đi hợp lệ, chuyển lượt và giữ nút enable
@@ -517,16 +550,31 @@ def main(player_names=None):
                             
                             # Trường hợp 1: Quân chưa từng được click (trong chuồng hoặc trên bàn)
                             if pawn.counter == 0:
+                                # Kiểm tra vị trí xuất phát có quân cùng màu không
+                                start_position = pawn.dict[1]
+                                position_blocked = False
+                                for other_pawn in current_player.pawnlist:
+                                    if other_pawn != pawn and other_pawn.rect.center == start_position:
+                                        position_blocked = True
+                                        break
                                 # Chỉ cho click khi tung được tổng lớn hơn hoặc bằng 10
-                                if (dice_num1 + dice_num2) >= 10:
+                                if (dice_num1 + dice_num2) >= 10 and not position_blocked:
                                     can_click = True
                             # Trường hợp 2: Quân đã từng được click (có thể click với bất kỳ số nào)
                             else:
+                                # Kiểm tra vị trí đích có quân cùng màu không
+                                target_position = pawn.dict[pawn.counter + dice_num1 + dice_num2]
+                                position_blocked = False
+                                for other_pawn in current_player.pawnlist:
+                                    if other_pawn != pawn and other_pawn.rect.center == target_position:
+                                        position_blocked = True
+                                        break
                                 # Quân trên bàn và có thể di chuyển
-                                if pawn.counter > 0 and pawn.counter + (dice_num1 + dice_num2) <= 97:
+                                if pawn.counter > 0 and pawn.counter + (dice_num1 + dice_num2) <= 97 and not position_blocked:
                                     can_click = True
                             
                             if can_click:  # Chỉ xử lý khi can_click = True
+                            
                                 # Bỏ chọn tất cả quân cờ khác
                                 for other_pawn in current_player.pawnlist:
                                     other_pawn.activepawn = False
@@ -639,6 +687,11 @@ def main(player_names=None):
                                     valid_move = True
                                     # Vô hiệu hóa nút tung xúc xắc trong khi animation đang chạy
                                     roll_button_enabled = False
+
+                            if not can_click and position_blocked:
+                                # Hiển thị thông báo nếu click vào quân không thể di chuyển do bị chặn
+                                alert_manager.add_alert("Đã có quân của bạn ở đó!", 2000)
+                            
                             break  # Đặt break ra ngoài, chỉ thoát khỏi vòng lặp sau khi kiểm tra xong
        
         # Vẽ sao
@@ -649,10 +702,12 @@ def main(player_names=None):
         draw_sidebar(win, Statekpr)
         for entity in allSprites:
             win.blit(entity.surf, entity.rect)
-            
-        # Vẽ alert nếu có
-        if alert_message and pygame.time.get_ticks() - alert_time < 2000:  # Hiển thị trong 2 giây
-            draw_alert(win, alert_message)
+        
+        # Vẽ các thông báo - đặt ở cuối để hiển thị trên cùng
+        alert_manager.draw(win)
+        
+        # Cập nhật màn hình
+        pygame.display.update()
             
         # Vẽ dialog nếu đang hiển thị
         if showing_dialog:

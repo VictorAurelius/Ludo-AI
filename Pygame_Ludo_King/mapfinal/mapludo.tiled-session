@@ -114,10 +114,10 @@
         },
         "mapludo.tmx": {
             "scale": 1,
-            "selectedLayer": 12,
+            "selectedLayer": 13,
             "viewCenter": {
-                "x": 418,
-                "y": 319
+                "x": 382,
+                "y": 309
             }
         },
         "o_di_chuyen.tsx": {
