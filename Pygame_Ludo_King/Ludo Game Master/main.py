@@ -301,6 +301,48 @@ def main(player_names=None):
             player.name = player_names[i]
     #Set while loop variable
     mainLoop = True
+    
+    # Kiểm tra va chạm với sao
+    got_roll_again = False  # Biến để kiểm tra có được tung lại không
+    teleported = False  # Biến để đánh dấu quân vừa được dịch chuyển
+    valid_move = False  # Biến để kiểm tra nước đi hợp lệ
+    
+    teleport_chain_active = False  # Theo dõi nếu đang trong chuỗi teleport
+    last_teleport_time = 0  # Thời gian teleport cuối cùng
+    
+    def check_star_collision(pawn, current_player=None):
+        nonlocal got_roll_again, teleported
+        for star in stars:
+            if star.check_exact_collision(pawn):
+                effect = star.apply_effect(pawn, Statekpr)
+                if effect == "roll_again":
+                    alert_manager.add_alert("Được tung xúc xắc thêm lần nữa!", 3000)
+                    # Không chuyển lượt, cho phép tung xúc xắc lại
+                    roll_button_enabled = True
+                    got_roll_again = True
+                elif effect == "teleported":
+                    alert_manager.add_alert("Dịch chuyển đến vị trí ngẫu nhiên!", 3000)
+                    teleported = True
+                    
+                    # Thay vì di chuyển ngay lập tức, sử dụng animation teleport
+                    old_pos = pawn.rect.center
+                    new_pos = pawn.rect.center  # Vị trí mới đã được cập nhật trong apply_effect
+                    
+                    # Khởi tạo animation teleport
+                    pawn.start_teleport(new_pos)
+                    
+                    # Đánh dấu chuỗi teleport đang hoạt động
+                    teleport_chain_active = True
+                    last_teleport_time = pygame.time.get_ticks()
+                    
+                    # Vô hiệu hóa nút tung xúc xắc trong khi animation đang chạy
+                    roll_button_enabled = False
+                else:  # effect == "died"
+                    alert_manager.add_alert("Quân cờ đã về chuồng!", 3000)
+                    teleport_chain_active = False
+                return True
+        return False
+    
     #main game loop
     while mainLoop:
         # Vẽ map từ Tiled
@@ -319,18 +361,94 @@ def main(player_names=None):
         any_pawn_animating = False
         for player in Statekpr.players:
             for pawn in player.pawnlist:
-                if pawn.is_animating:
+                # Cập nhật animation
+                pawn.update_animation()
+                # Thêm kiểm tra teleporting
+                if pawn.teleporting:
+                    pawn.update_animation()
+                    any_pawn_animating = True
+                # Kiểm tra nếu quân đang di chuyển
+                if pawn.is_move:
                     pawn.update_animation()  # Cập nhật vị trí của quân trong animation
                     any_pawn_animating = True
                 elif hasattr(pawn, 'just_finished_animation') and pawn.just_finished_animation:
                     # Quân vừa hoàn thành animation, xử lý các hiệu ứng sau di chuyển
                     pawn.just_finished_animation = False
+                    
+                    # Đặt thời gian để kiểm tra chuỗi teleport
+                    last_animation_end_time = pygame.time.get_ticks()
+                    
+                    # Đặt cờ để cho biết đã kiểm tra va chạm với sao
+                    star_checked = False
+                    chain_continues = False
+                                                
+                    got_roll_again = False  # Reset biến
+                    teleported = False  # Reset biến
+                    
+                    # Kiểm tra va chạm với sao ban đầu
+                    star_hit = check_star_collision(pawn, current_player)
+                    star_checked = True
+                    
+                    # Nếu vừa teleport và nhận được hiệu ứng teleport mới, đánh dấu chuỗi tiếp tục
+                    if teleported:
+                        teleport_chain_active = True
+                        last_teleport_time = pygame.time.get_ticks()
+                        chain_continues = True
+                        
+                    elif not teleported:
+                        teleport_chain_active = False
+                    
+                    if hasattr(pawn, 'teleporting') and pawn.teleporting == False and pawn.counter == 1:
+                        # Kiểm tra có quân nào của đối thủ ở vị trí mới không
+                        new_pos = pawn.rect.center
+                        for other_player in Statekpr.players:
+                            if other_player != current_player:
+                                for other_pawn in other_player.pawnlist:
+                                    if other_pawn.rect.center == new_pos:
+                                        # Đá quân về chuồng và tăng biến đếm số lần bị đá
+                                        other_pawn.counter = 0
+                                        other_pawn.rect.center = other_pawn.startpos
+                                        other_player.pawns -= 1
+                                        other_player.times_kicked += 1
+                                        break
+                                    
+                        # Kiểm tra va chạm với sao sau khi teleport
+                        check_star_collision(pawn, current_player)
+                        star_checked = True
+                        
+                        # Nếu nhận được teleport từ sao, đánh dấu chuỗi tiếp tục
+                        if teleported:
+                            teleport_chain_active = True
+                            last_teleport_time = pygame.time.get_ticks()
+                            chain_continues = True
+                            
+                        if not teleported:
+                            teleport_chain_active = False
+                                    
+                        # Enable lại nút tung xúc xắc
+                        roll_button_enabled = True
+                        
+                        
+                        # Cập nhật người chơi hiển thị sau khi chuyển lượt
+                        Statekpr.update_display_player()    
+                        
+                    # Nếu đã kiểm tra va chạm với sao và không có chuỗi teleport tiếp tục
+                    if star_checked and not chain_continues:
+                        # CHỈ chuyển lượt nếu không còn trong chuỗi teleport và không được tung lại xúc xắc
+                        if not teleport_chain_active and valid_move and not got_roll_again:
+                            # Kích hoạt nút tung xúc xắc
+                            roll_button_enabled = True
+                            
+                            Statekpr.find_next_valid_player()
+                            
+                            # Cập nhật người chơi hiển thị sau khi chuyển lượt
+                            Statekpr.update_display_player()        
+                    
                     # Kiểm tra nếu quân đã về đích (counter = 52 hoặc 53) để tăng số quân về đích
                     if pawn.counter == 96 or pawn.counter == 97:
                         # Tìm người chơi sở hữu quân này và tăng pawns_home
                         for player in Statekpr.players:
                             if pawn in player.pawnlist:
-                                player.pawns_home += 4
                                 # Kiểm tra nếu người chơi vừa về đích hết và chưa có trong danh sách
                                 if player.pawns_home == 4 and player not in finished_players:
                                     finished_players.append(player)
@@ -348,54 +466,11 @@ def main(player_names=None):
                                     other_player.pawns -= 1
                                     other_player.times_kicked += 1
                                     break
-                                                
-                    # Kiểm tra va chạm với sao
-                    got_roll_again = False  # Biến để kiểm tra có được tung lại không
-                    teleported = False  # Biến để đánh dấu quân vừa được dịch chuyển
-                    def check_star_collision(pawn):
-                        nonlocal got_roll_again, teleported
-                        for star in stars:
-                            if star.check_exact_collision(pawn):
-                                effect = star.apply_effect(pawn, Statekpr)
-                                if effect == "roll_again":
-                                    alert_manager.add_alert("Được tung xúc xắc thêm lần nữa!", 3000)
-                                    # Không chuyển lượt, cho phép tung xúc xắc lại
-                                    roll_button_enabled = True
-                                    got_roll_again = True
-                                elif effect == "teleported":
-                                    alert_manager.add_alert("Dịch chuyển đến vị trí ngẫu nhiên!", 3000)
-                                    teleported = True
-                                    if pawn.counter == 96 or pawn.counter == 97:
-                                        # Tìm người chơi sở hữu quân này và tăng pawns_home
-                                        for player in Statekpr.players:
-                                            if pawn in player.pawnlist:
-                                                player.pawns_home += 4
-                                                # Kiểm tra nếu người chơi vừa về đích hết và chưa có trong danh sách
-                                                if player.pawns_home == 4 and player not in finished_players:
-                                                    finished_players.append(player)
-                                                break
-                                    # Kiểm tra nếu vị trí mới có sao không
-                                    check_star_collision(pawn)
-                                else:  # effect == "died"
-                                    alert_manager.add_alert("Quân cờ đã về chuồng!", 3000)
-                                return True
-                        return False
                     
-                    # Kiểm tra va chạm với sao ban đầu
-                    star_hit = check_star_collision(pawn)
                     
-                    # Nếu không có sao, xử lý kết thúc lượt
+                    
                     if roll_button_enabled == False:
                         roll_button_enabled = True
-                    if valid_move and not got_roll_again:
-                        # Enable lại nút tung xúc xắc
-                        roll_button_enabled = True
-                                        
-                        # Xác định và chuyển lượt sang người chơi tiếp theo
-                        Statekpr.find_next_valid_player()
-                        
-                        # Cập nhật người chơi hiển thị sau khi chuyển lượt
-                        Statekpr.update_display_player()
                             
                 # Kiểm tra điều kiện hiển thị bảng xếp hạng
                 showing_ranking = len(finished_players) >= 3
@@ -544,7 +619,11 @@ def main(player_names=None):
                         
                     # Chỉ cho phép di chuyển quân của người chơi đang đến lượt
                     for pawn in current_player.pawnlist:
-                        if pawn.rect.collidepoint(mouse_pos):
+                        # Kiểm tra va chạm chính xác hơn với quân cờ
+                        distance_threshold = 15  # Giá trị ngưỡng khoảng cách, có thể điều chỉnh
+                        pawn_center = pawn.rect.center
+                        mouse_distance = ((mouse_pos[0] - pawn_center[0])**2 + (mouse_pos[1] - pawn_center[1])**2)**0.5
+                        if mouse_distance <= distance_threshold:
                             # Kiểm tra điều kiện được phép click
                             can_click = False
                             position_blocked = False
@@ -565,15 +644,21 @@ def main(player_names=None):
                                 
                             # Trường hợp 2: Quân đã từng được click (có thể click với bất kỳ số nào)
                             else:
-                                # Kiểm tra vị trí đích có quân cùng màu không
-                                target_position = pawn.dict[pawn.counter + dice_num1 + dice_num2]
-                                for other_pawn in current_player.pawnlist:
-                                    if other_pawn != pawn and other_pawn.rect.center == target_position:
-                                        position_blocked = True
-                                        break
-                                # Quân trên bàn và có thể di chuyển
-                                if pawn.counter > 0 and pawn.counter + (dice_num1 + dice_num2) <= 97 and not position_blocked:
-                                    can_click = True
+                                # Kiểm tra ngay nếu vượt quá 97
+                                if pawn.counter + (dice_num1 + dice_num2) > 97:
+                                    # Hiển thị thông báo lỗi
+                                    alert_manager.add_alert("Không thể di chuyển quá đích!", 2000)
+                                else:
+                                    # Kiểm tra vị trí đích có quân cùng màu không
+                                    target_position = pawn.dict[pawn.counter + dice_num1 + dice_num2]
+                                    for other_pawn in current_player.pawnlist:
+                                        if other_pawn != pawn and other_pawn.rect.center == target_position:
+                                            position_blocked = True
+                                            break
+                                    
+                                    # Quân trên bàn và có thể di chuyển
+                                    if pawn.counter > 0 and not position_blocked:
+                                        can_click = True
                             
                             if can_click:  # Chỉ xử lý khi can_click = True
                             
@@ -588,91 +673,13 @@ def main(player_names=None):
                                 if pawn.counter == 0 and dice_num1 + dice_num2 >= 10:
                                     pawn.counter = 1  # Đặt counter là 1 (vị trí xuất phát)
                                     new_pos = pawn.dict[1]  # Đặt quân ở vị trí xuất phát
-                                    pawn.rect.center = new_pos  # Đặt quân ở vị trí xuất phát
+                                    pawn.start_teleport(new_pos)  # Đặt quân ở vị trí xuất phát
                                     current_player.pawns += 1  # Tăng số quân trên bàn
                                     valid_move = True
-                                    # Kiểm tra có quân nào của đối thủ ở vị trí mới không
-                                    for other_player in Statekpr.players:
-                                        if other_player != current_player:
-                                            for other_pawn in other_player.pawnlist:
-                                                if other_pawn.rect.center == new_pos:
-                                                    # Đá quân về chuồng và tăng biến đếm số lần bị đá
-                                                    other_pawn.counter = 0
-                                                    other_pawn.rect.center = other_pawn.startpos
-                                                    other_player.pawns -= 1
-                                                    other_player.times_kicked += 1
-                                                    break
-                                    # Enable lại nút tung xúc xắc
-                                    roll_button_enabled = True
-                                        
-                                    # Xác định và chuyển lượt sang người chơi tiếp theo
-                                    if Statekpr.redTurn:
-                                        # Kiểm tra Blue
-                                        if Statekpr.playerBlue.pawns_home < 4:
-                                            Statekpr.redTurn = False
-                                            Statekpr.blueTurn = True
-                                        # Kiểm tra Yellow
-                                        elif Statekpr.playerYellow.pawns_home < 4:
-                                            Statekpr.redTurn = False
-                                            Statekpr.yellowTurn = True
-                                        # Kiểm tra Green
-                                        elif Statekpr.playerGreen.pawns_home < 4:
-                                            Statekpr.redTurn = False
-                                            Statekpr.greenTurn = True
-                                        # Nếu tất cả đã về đích, quay lại Red
-                                        else:
-                                            Statekpr.redTurn = True
-                                        
-                                    elif Statekpr.blueTurn:
-                                        # Kiểm tra Yellow
-                                        if Statekpr.playerYellow.pawns_home < 4:
-                                            Statekpr.blueTurn = False
-                                            Statekpr.yellowTurn = True
-                                        # Kiểm tra Green
-                                        elif Statekpr.playerGreen.pawns_home < 4:
-                                            Statekpr.blueTurn = False
-                                            Statekpr.greenTurn = True
-                                        # Kiểm tra Red
-                                        elif Statekpr.playerRed.pawns_home < 4:
-                                            Statekpr.blueTurn = False
-                                            Statekpr.redTurn = True
-                                        # Nếu tất cả đã về đích, quay lại Blue
-                                        else:
-                                            Statekpr.blueTurn = True
-                                        
-                                    elif Statekpr.yellowTurn:
-                                        # Kiểm tra Green
-                                        if Statekpr.playerGreen.pawns_home < 4:
-                                            Statekpr.yellowTurn = False
-                                            Statekpr.greenTurn = True
-                                        # Kiểm tra Red
-                                        elif Statekpr.playerRed.pawns_home < 4:
-                                            Statekpr.yellowTurn = False
-                                            Statekpr.redTurn = True
-                                        # Kiểm tra Blue
-                                        elif Statekpr.playerBlue.pawns_home < 4:
-                                            Statekpr.yellowTurn = False
-                                            Statekpr.blueTurn = True
-                                        # Nếu tất cả đã về đích, quay lại Yellow
-                                        else:
-                                            Statekpr.yellowTurn = True
-                                        
-                                    elif Statekpr.greenTurn:
-                                        # Kiểm tra Red
-                                        if Statekpr.playerRed.pawns_home < 4:
-                                            Statekpr.greenTurn = False
-                                            Statekpr.redTurn = True
-                                        # Kiểm tra Blue
-                                        elif Statekpr.playerBlue.pawns_home < 4:
-                                            Statekpr.greenTurn = False
-                                            Statekpr.blueTurn = True
-                                        # Kiểm tra Yellow
-                                        elif Statekpr.playerYellow.pawns_home < 4:
-                                            Statekpr.greenTurn = False
-                                            Statekpr.yellowTurn = True
-                                        # Nếu tất cả đã về đích, quay lại Green
-                                        else:
-                                            Statekpr.greenTurn = True
+                                    
+                                    # Vô hiệu hóa nút tung xúc xắc trong khi animation đang chạy
+                                    roll_button_enabled = False
+                                    
                                     Statekpr.update_display_player()
                                     
                                 # Trường hợp 2: Di chuyển quân trên bàn (chỉ khi quân không phải vừa được xuất ra)

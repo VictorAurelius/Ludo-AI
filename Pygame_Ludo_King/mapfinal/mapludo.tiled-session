@@ -100,6 +100,18 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "WBlue_Animation.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "WBlue_Left_Animation.tsx": {
+            "scaleInDock": 0.5,
+            "scaleInEditor": 1
+        },
+        "WBlue_Right_Animation.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "Warrior_Blue1.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
@@ -116,8 +128,8 @@
             "scale": 1,
             "selectedLayer": 13,
             "viewCenter": {
-                "x": 382,
-                "y": 309
+                "x": 345,
+                "y": 351
             }
         },
         "o_di_chuyen.tsx": {
@@ -125,7 +137,9 @@
             "scaleInEditor": 1
         }
     },
-    "last.imagePath": "C:/Users/nhat6/OneDrive/Documents/AI/BTL/Ludo-AI/Pygame_Ludo_King/img",
+    "frame.defaultDuration": 100,
+    "last.imagePath": "C:/Users/nhat6/OneDrive/Documents/AI/BTL/Ludo-AI/Pygame_Ludo_King/assets_ver1/assets_nhat/Blue",
+    "last.objectTemplatePath": "C:/Users/nhat6/OneDrive/Documents/AI/BTL/Ludo-AI/Pygame_Ludo_King/mapfinal",
     "map.height": 29,
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 25,
@@ -135,10 +149,16 @@
         "mapludo.tmx",
         "Warrior_Blue1.tsx",
         "Warrior_Yellow1.tsx",
-        "Star.tsx"
+        "Star.tsx",
+        "WBlue_Left_Animation.tsx",
+        "WBlue_Right_Animation.tsx",
+        "WBlue_Animation.tsx"
     ],
     "project": "mapludo.tiled-project",
     "recentFiles": [
+        "WBlue_Animation.tsx",
+        "WBlue_Right_Animation.tsx",
+        "WBlue_Left_Animation.tsx",
         "Star.tsx",
         "Warrior_Yellow1.tsx",
         "Warrior_Blue1.tsx",
@@ -147,16 +167,13 @@
         "Happy_Sheep1.tsx",
         "Tree1.tsx",
         "18.tsx",
-        "02.tsx",
-        "13.tsx",
-        "17.tsx",
-        "16.tsx"
+        "02.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.margin": 0,
     "tileset.spacing": 0,
     "tileset.tileSize": {
-        "height": 25,
-        "width": 25
+        "height": 75,
+        "width": 75
     }
 }
