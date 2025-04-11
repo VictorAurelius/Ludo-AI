@@ -6,8 +6,15 @@ class MainBoard:
         pygame.init()
         self.screen = pygame.display.set_mode((800, 800))
         pygame.display.set_caption("Ludo King - Cờ Cá Ngựa")
-        self.background = pygame.image.load("UI/main_1.jpg")
-        self.background = pygame.transform.scale(self.background, (800, 800))
+        # Load water texture
+        self.water_tile = pygame.image.load("assets_ver1/TinySwords/Terrain/Water/Water.png")
+        # Create a surface for the tiled background
+        self.background = pygame.Surface((800, 800))
+        # Tile the water texture across the background
+        tile_size = 25  # from Water.tsx tilewidth/tileheight
+        for y in range(0, 800, tile_size):
+            for x in range(0, 800, tile_size):
+                self.background.blit(self.water_tile, (x, y), (0, 0, tile_size, tile_size))
         # Sử dụng Tahoma cho tiếng Việt
         self.font = pygame.font.SysFont("tahoma", 74)
         self.small_font = pygame.font.SysFont("tahoma", 36)
@@ -43,7 +50,7 @@ class MainBoard:
 
     def draw_main_menu(self):
         self.screen.blit(self.background, (0, 0))
-        title = self.font.render("LUDO", True, (0, 0, 0))
+        title = self.font.render("LUDO", True, (255, 255, 255))
         self.screen.blit(title, (300, 150))
         button_text = {
             "play": "Chơi",
@@ -56,7 +63,7 @@ class MainBoard:
         for btn_text, btn_rect in self.buttons.items():
             if btn_text not in ["ok", "back"]:
                 pygame.draw.rect(self.screen, (0, 0, 0), btn_rect, 2)
-                text = self.small_font.render(button_text[btn_text], True, (0, 0, 0))
+                text = self.small_font.render(button_text[btn_text], True, (255, 255, 255))
                 # Tính toán vị trí để căn giữa text
                 text_width = text.get_width()
                 text_x = btn_rect.centerx - text_width // 2
@@ -79,14 +86,14 @@ class MainBoard:
         
         y_offset = 250
         for member in members:
-            text = self.small_font.render(member, True, (0, 0, 0))
+            text = self.small_font.render(member, True, (255, 255, 255))
             text_x = 400 - text.get_width() // 2
             self.screen.blit(text, (text_x, y_offset))
             y_offset += 50
             
         # Vẽ nút Quay lại
         pygame.draw.rect(self.screen, (0, 0, 0), self.buttons["back"], 2)
-        back_text = self.small_font.render("Quay lại", True, (0, 0, 0))
+        back_text = self.small_font.render("Quay lại", True, (255, 255, 255))
         text_x = self.buttons["back"].centerx - back_text.get_width() // 2
         text_y = self.buttons["back"].centery - back_text.get_height() // 2
         self.screen.blit(back_text, (text_x, text_y))
@@ -95,23 +102,23 @@ class MainBoard:
 
     def draw_name_input(self):
         self.screen.blit(self.background, (0, 0))
-        prompt = self.small_font.render("Nhập tên người chơi:", True, (0, 0, 0))
+        prompt = self.small_font.render("Nhập tên người chơi:", True, (255, 255, 255))
         self.screen.blit(prompt, (50, 150))
         y_offset = 200
         for i in range(4):
-            text = self.small_font.render(f"Người chơi {i+1}: {self.player_names[i]}", True, (0, 0, 0))
+            text = self.small_font.render(f"Người chơi {i+1}: {self.player_names[i]}", True, (255, 255, 255))
             self.screen.blit(text, (50, y_offset))
             y_offset += 80
         # Vẽ nút Đồng ý
         pygame.draw.rect(self.screen, (0, 0, 0), self.buttons["ok"], 2)
-        ok_text = self.small_font.render("Bắt đầu", True, (0, 0, 0))
+        ok_text = self.small_font.render("Bắt đầu", True, (255, 255, 255))
         text_x = self.buttons["ok"].centerx - ok_text.get_width() // 2
         text_y = self.buttons["ok"].centery - ok_text.get_height() // 2
         self.screen.blit(ok_text, (text_x, text_y))
         
         # Vẽ nút Quay lại
         pygame.draw.rect(self.screen, (0, 0, 0), self.buttons["back"], 2)
-        back_text = self.small_font.render("Quay lại", True, (0, 0, 0))
+        back_text = self.small_font.render("Quay lại", True, (255, 255, 255))
         text_x = self.buttons["back"].centerx - back_text.get_width() // 2
         text_y = self.buttons["back"].centery - back_text.get_height() // 2
         self.screen.blit(back_text, (text_x, text_y))
@@ -122,12 +129,12 @@ class MainBoard:
         y_offset = 50
         
         # Vẽ tiêu đề
-        title = self.font.render("Luật chơi", True, (0, 0, 0))
+        title = self.font.render("Luật chơi", True, (255, 255, 255))
         self.screen.blit(title, (250, 100))
         
         # Vẽ từng dòng luật
         for rule in self.rules_text:
-            text = self.small_font.render(rule, True, (0, 0, 0))
+            text = self.small_font.render(rule, True, (255, 255, 255))
             self.screen.blit(text, (50, y_offset))
             y_offset += 40
             
