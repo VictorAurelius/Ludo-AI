@@ -37,19 +37,12 @@ GAME_STATE_PAUSED = "paused"
 GAME_STATE_TRANSITION = "transition"
 current_game_state = GAME_STATE_MENU
 
-# Transition effect
-transition_alpha = 0
-transition_speed = 10
-transitioning_to = None
-
-# Game variables
+# Game UI Elements
 roll_button = pygame.Rect(735, 290, 180, 50)
 title_button = pygame.Rect(745, 10, 160, 40)
 title_ranking_button = pygame.Rect(400, 400, 200, 50)
 yes_button = pygame.Rect(410, 260, 60, 30)
 no_button = pygame.Rect(530, 260, 90, 30)
-
-# Sound control
 sound_button = pygame.Rect(875, 10, 40, 40)
 
 # Colors
@@ -62,10 +55,6 @@ COLORS = {
     'Yellow': (255, 255, 0),
     'Green': (0, 255, 0)
 }
-
-# Animation constants
-DICE_ANIMATION_FRAMES = 15
-DICE_ANIMATION_SPEED = 50
 
 # Game variables
 dice_images = []
@@ -82,8 +71,7 @@ finished_players = []
 
 def draw_sound_button():
     """Draw sound control button"""
-    # Draw button background
-    is_enabled = sound_manager.enabled and sound_manager.mixer_working
+    is_enabled = sound_manager.enabled and sound_manager.initialized
     mouse_hover = sound_button.collidepoint(pygame.mouse.get_pos())
     button_color = GRAY if is_enabled else BLACK
     if mouse_hover:
@@ -92,53 +80,17 @@ def draw_sound_button():
                        min(button_color[2] + 30, 255))
     
     pygame.draw.rect(win, button_color, sound_button)
+    pygame.draw.polygon(win, WHITE, [
+        (sound_button.x + 10, sound_button.y + 15),
+        (sound_button.x + 20, sound_button.y + 10),
+        (sound_button.x + 20, sound_button.y + 30),
+        (sound_button.x + 10, sound_button.y + 25)
+    ])
     
-    # Draw icon
-    if is_enabled:
-        # Draw speaker icon
-        pygame.draw.polygon(win, WHITE, [
-            (sound_button.x + 10, sound_button.y + 15),
-            (sound_button.x + 20, sound_button.y + 10),
-            (sound_button.x + 20, sound_button.y + 30),
-            (sound_button.x + 10, sound_button.y + 25)
-        ])
-        # Draw sound waves
-        for i in range(3):
-            start_x = sound_button.x + 25 + i * 5
-            pygame.draw.arc(win, WHITE,
-                          (start_x, sound_button.y + 15, 5, 10),
-                          -1, 1)
-    else:
-        # Draw crossed speaker
+    if not is_enabled:
         pygame.draw.line(win, WHITE,
                         (sound_button.x + 10, sound_button.y + 10),
                         (sound_button.x + 30, sound_button.y + 30), 2)
-
-def start_transition(target_state):
-    """Start transition to new game state"""
-    global current_game_state, transition_alpha, transitioning_to
-    current_game_state = GAME_STATE_TRANSITION
-    transition_alpha = 0
-    transitioning_to = target_state
-    sound_manager.play_sound('transition')
-
-def update_transition():
-    """Update transition effect"""
-    global transition_alpha, current_game_state, transitioning_to
-    if current_game_state == GAME_STATE_TRANSITION:
-        transition_alpha += transition_speed
-        if transition_alpha >= 255:
-            current_game_state = transitioning_to
-            transitioning_to = None
-            transition_alpha = 255
-
-def draw_transition():
-    """Draw transition effect"""
-    if current_game_state == GAME_STATE_TRANSITION:
-        fade_surface = pygame.Surface((winX, winY))
-        fade_surface.fill(BLACK)
-        fade_surface.set_alpha(transition_alpha)
-        win.blit(fade_surface, (0, 0))
 
 def load_game_assets():
     """Load all game assets"""
@@ -189,32 +141,26 @@ def init_game_variables():
     dice_num1 = 1
     dice_num2 = 1
     
-    # Initialize game state
     statekpr = Statekeep()
 
 def draw_dialog(win):
     """Draw dialog box asking to return to title"""
-    # Draw semi-transparent background
     s = pygame.Surface((winX, winY))
     s.set_alpha(128)
     s.fill(BLACK)
     win.blit(s, (0, 0))
     
-    # Draw dialog box
     dialog_rect = pygame.Rect(400, 200, 230, 100)
     pygame.draw.rect(win, WHITE, dialog_rect)
     pygame.draw.rect(win, BLACK, dialog_rect, 2)
     
-    # Draw text
     vn_font = pygame.font.SysFont("segoeui", 24)
     text = vn_font.render(u"Bạn có muốn trở về", True, BLACK)
     text2 = vn_font.render(u"trang tiêu đề không?", True, BLACK)
     win.blit(text, (410, 200))
     win.blit(text2, (410, 220))
     
-    # Draw buttons with hover effect
     mouse_pos = pygame.mouse.get_pos()
-    
     yes_color = GRAY if yes_button.collidepoint(mouse_pos) else BLACK
     no_color = GRAY if no_button.collidepoint(mouse_pos) else BLACK
     
@@ -228,7 +174,7 @@ def draw_dialog(win):
 
 def handle_menu():
     """Handle menu state"""
-    global menu_manager, current_game_state
+    global menu_manager
     
     if menu_manager is None:
         menu_manager = MenuManager(win)
@@ -237,15 +183,14 @@ def handle_menu():
         if event.type == QUIT:
             return False
         elif event.type == MOUSEBUTTONDOWN:
-            # Handle sound button
             if sound_button.collidepoint(event.pos):
                 sound_manager.toggle()
                 sound_manager.play_sound('click')
             else:
                 action = menu_manager.handle_click(event.pos)
                 if action == "start_game":
-                    start_transition(GAME_STATE_PLAYING)
                     init_game_variables()
+                    return action
                 elif action == "exit":
                     return False
     
@@ -255,7 +200,7 @@ def handle_menu():
 
 def handle_game_events():
     """Handle game state events"""
-    global current_game_state, showing_dialog
+    global showing_dialog
     
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -263,8 +208,7 @@ def handle_game_events():
         elif event.type == MOUSEBUTTONDOWN:
             if showing_dialog:
                 if yes_button.collidepoint(event.pos):
-                    start_transition(GAME_STATE_MENU)
-                    return True
+                    return "menu"
                 elif no_button.collidepoint(event.pos):
                     showing_dialog = False
                 sound_manager.play_sound('click')
@@ -282,21 +226,17 @@ def handle_game():
     """Handle game state"""
     global statekpr
     
-    # Draw game board
     win.blit(bgBoard, (0, 0))
     
-    # Update and draw game objects
     if statekpr:
         statekpr.update()
     
-    # Handle events
-    if not handle_game_events():
-        return False
+    result = handle_game_events()
+    if result != True:
+        return result
     
-    # Draw UI elements
     draw_sound_button()
     
-    # Draw dialog if showing
     if showing_dialog:
         draw_dialog(win)
     
@@ -304,6 +244,8 @@ def handle_game():
 
 def main():
     """Main game loop"""
+    global current_game_state
+    
     clock = pygame.time.Clock()
     running = True
     
@@ -311,28 +253,26 @@ def main():
         clock.tick(60)
         
         if current_game_state == GAME_STATE_MENU:
-            running = handle_menu()
+            result = handle_menu()
+            if result == "start_game":
+                current_game_state = GAME_STATE_PLAYING
+            elif not result:
+                running = False
+        
         elif current_game_state == GAME_STATE_PLAYING:
-            running = handle_game()
-        elif current_game_state == GAME_STATE_TRANSITION:
-            update_transition()
-            draw_transition()
+            result = handle_game()
+            if result == "menu":
+                current_game_state = GAME_STATE_MENU
+            elif not result:
+                running = False
         
         pygame.display.flip()
 
 if __name__ == "__main__":
-    # Load assets
     if not load_game_assets():
         print("Failed to load game assets!")
         pygame.quit()
         exit(1)
     
-    # Initialize game variables
-    init_game_variables()
-    
-    # Start game
     main()
-    
-    # Cleanup
-    sound_manager.stop_all()
     pygame.quit()

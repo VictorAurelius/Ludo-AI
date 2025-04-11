@@ -6,17 +6,17 @@ class SoundManager:
         """Initialize the sound manager"""
         self.enabled = True
         self.sounds = {}
+        self.initialized = False
         
         # Try to initialize mixer
         try:
             pygame.mixer.init()
-            self.mixer_working = True
+            self.initialized = True
         except:
-            print("Warning: Sound system initialization failed. Sound will be disabled.")
-            self.mixer_working = False
+            print("Sound system initialization failed. Game will continue without sound.")
             return
-
-        # Define expected sound files
+        
+        # Define sound mapping
         sound_files = {
             'click': 'click.wav',
             'hover': 'hover.wav',
@@ -25,61 +25,53 @@ class SoundManager:
             'win': 'win.wav',
         }
         
-        # Try to load each sound file
+        # Try to load sounds
         sound_dir = os.path.join('assets_ver1', 'sounds')
-        for sound_name, file_name in sound_files.items():
-            try:
-                file_path = os.path.join(sound_dir, file_name)
-                if os.path.exists(file_path):
-                    self.sounds[sound_name] = pygame.mixer.Sound(file_path)
-                    self.sounds[sound_name].set_volume(0.3)
-            except:
-                # Skip if file doesn't exist or can't be loaded
-                pass
-        
-        if not self.sounds:
-            print("Warning: No sound files found. Sound effects will be simulated.")
+        if os.path.exists(sound_dir):
+            for sound_name, file_name in sound_files.items():
+                try:
+                    file_path = os.path.join(sound_dir, file_name)
+                    if os.path.exists(file_path):
+                        self.sounds[sound_name] = pygame.mixer.Sound(file_path)
+                        self.sounds[sound_name].set_volume(0.3)
+                except:
+                    continue
     
     def play_sound(self, sound_name):
-        """Play a sound effect if it exists and sound is enabled"""
-        if not self.enabled or not self.mixer_working:
-            return
-            
-        if sound_name in self.sounds:
+        """Play a sound if available"""
+        if self.enabled and self.initialized and sound_name in self.sounds:
             try:
                 self.sounds[sound_name].play()
             except:
-                # Ignore playback errors
                 pass
     
     def stop_sound(self, sound_name):
-        """Stop a specific sound"""
-        if not self.mixer_working:
-            return
-            
-        if sound_name in self.sounds:
+        """Stop a specific sound if available"""
+        if self.initialized and sound_name in self.sounds:
             try:
                 self.sounds[sound_name].stop()
             except:
-                # Ignore stop errors
                 pass
     
     def stop_all(self):
         """Stop all sounds"""
-        if not self.mixer_working:
-            return
-            
-        try:
-            pygame.mixer.stop()
-        except:
-            # Ignore stop errors
-            pass
+        if self.initialized:
+            try:
+                pygame.mixer.stop()
+            except:
+                pass
     
     def toggle(self):
         """Toggle sound on/off"""
-        self.enabled = not self.enabled
-        if not self.enabled:
-            self.stop_all()
+        if self.initialized:
+            self.enabled = not self.enabled
+            if not self.enabled:
+                self.stop_all()
+
+    @property
+    def has_sounds(self):
+        """Check if any sounds are loaded"""
+        return bool(self.sounds)
 
 # Global sound manager instance
 _sound_manager = None
