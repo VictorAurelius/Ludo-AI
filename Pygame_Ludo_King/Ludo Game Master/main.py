@@ -141,7 +141,13 @@ def init_game_variables():
     dice_num1 = 1
     dice_num2 = 1
     
-    statekpr = Statekeep()
+    print("[DEBUG] Initializing new game state")
+    try:
+        statekpr = Statekeep()
+        print("[DEBUG] Statekeep initialized successfully")
+    except Exception as e:
+        print(f"[ERROR] Failed to initialize Statekeep: {e}")
+        return False
 
 def draw_dialog(win):
     """Draw dialog box asking to return to title"""
@@ -242,10 +248,11 @@ def handle_game():
     
     return True
 
-def main():
+def main(player_names=None):
     """Main game loop"""
-    global current_game_state
+    global current_game_state, menu_manager, statekpr
     
+    print(f"[DEBUG] Starting main with player_names: {player_names}")
     clock = pygame.time.Clock()
     running = True
     
@@ -253,24 +260,36 @@ def main():
         clock.tick(60)
         
         if current_game_state == GAME_STATE_MENU:
+            print("[DEBUG] In menu state")
             result = handle_menu()
             if result == "start_game":
+                print("[DEBUG] Transitioning from menu to game")
                 current_game_state = GAME_STATE_PLAYING
             elif not result:
+                print("[DEBUG] Exiting game")
                 running = False
         
         elif current_game_state == GAME_STATE_PLAYING:
+            print("[DEBUG] In game state")
             result = handle_game()
             if result == "menu":
+                print("[DEBUG] Transitioning from game to menu")
+                # Re-initialize menu manager to ensure clean state
+                global menu_manager
+                menu_manager = None
                 current_game_state = GAME_STATE_MENU
             elif not result:
+                print("[DEBUG] Exiting game")
                 running = False
         
         pygame.display.flip()
 
+    return False
+
 if __name__ == "__main__":
+    print("[DEBUG] Starting game initialization")
     if not load_game_assets():
-        print("Failed to load game assets!")
+        print("[ERROR] Failed to load game assets!")
         pygame.quit()
         exit(1)
     

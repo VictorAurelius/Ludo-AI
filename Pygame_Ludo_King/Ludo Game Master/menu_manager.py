@@ -6,22 +6,28 @@ class MenuManager:
     def __init__(self, screen):
         self.screen = screen
         self.current_menu = "main"
+        self.debug_mode = True
+        print("[DEBUG] MenuManager initialized")
         
-        # Load TMX files with error handling
+        # Define default layer configuration
+        self.layer_config = {
+            # Main menu layers
+            'background': {'alpha': 255, 'use_offset': True},
+            'title': {'alpha': 255, 'use_offset': True},
+            'buttons': {'alpha': 255, 'use_offset': True},
+            # Add configurations for any other layers you have
+        }
+        
         try:
             tmx_path = os.path.join("UI", "main_menu.tmx")
             if not os.path.exists(tmx_path):
                 raise FileNotFoundError(f"Could not find {tmx_path}")
             self.main_menu_map = pytmx.load_pygame(tmx_path)
             
-            tmx_path = os.path.join("UI", "sp_menu.tmx")
+            tmx_path = os.path.join("UI", "sp_menu.tmx") 
             if not os.path.exists(tmx_path):
                 raise FileNotFoundError(f"Could not find {tmx_path}")
             self.sp_menu_map = pytmx.load_pygame(tmx_path)
-            
-            print("Successfully loaded TMX files")
-            print(f"Main menu layers: {list(self.main_menu_map.layernames.keys())}")
-            print(f"SP menu layers: {list(self.sp_menu_map.layernames.keys())}")
             
         except Exception as e:
             print(f"Error loading TMX files: {e}")
@@ -110,24 +116,32 @@ class MenuManager:
         }
         
         self.active_button = None
-        self.debug_mode = True  # Enable to show layer info
 
     def draw_layer(self, tmx_map, layer_name):
-        """Draw a specific layer from TMX map with proper offset"""
+        """Draw a specific layer from TMX map"""
         if layer_name not in tmx_map.layernames:
             if self.debug_mode:
                 print(f"Layer '{layer_name}' not found in map")
             return
 
         layer = tmx_map.layernames[layer_name]
-        config = self.layer_config[layer_name]
         
-        # Get layer offset if specified
-        offset_x = layer.offsetx if hasattr(layer, 'offsetx') and config['use_offset'] else 0
-        offset_y = layer.offsety if hasattr(layer, 'offsety') and config['use_offset'] else 0
-        
-        if self.debug_mode:
-            print(f"Drawing layer '{layer_name}' with offset ({offset_x}, {offset_y})")
+        try:
+            # Get configuration for layer, with safe fallback values
+            config = self.layer_config.get(layer_name, {})
+            use_offset = config.get('use_offset', False)  # Default to False if not specified
+            alpha = config.get('alpha', 255)  # Default alpha if not specified
+            
+            # Get layer offset with safer float conversion
+            offset_x = float(getattr(layer, 'offsetx', 0)) if use_offset else 0
+            offset_y = float(getattr(layer, 'offsety', 0)) if use_offset else 0
+            
+            print(f"[DEBUG] Drawing layer '{layer_name}' with offset ({offset_x}, {offset_y})")
+        except Exception as e:
+            print(f"[DEBUG] Error handling layer '{layer_name}': {e}")
+            # Use safe defaults if there's an error
+            offset_x = offset_y = 0
+            alpha = 255
         
         # Create a surface for this layer
         layer_surface = pygame.Surface((925, 725), pygame.SRCALPHA)
@@ -141,8 +155,8 @@ class MenuManager:
                     pos_y = y * tmx_map.tileheight + offset_y
                     layer_surface.blit(tile, (pos_x, pos_y))
         
-        # Apply layer alpha
-        layer_surface.set_alpha(config['alpha'])
+        # Apply layer alpha with safe value
+        layer_surface.set_alpha(alpha)
         
         # Blit the layer surface onto the screen
         self.screen.blit(layer_surface, (0, 0))
@@ -172,7 +186,7 @@ class MenuManager:
         # Draw all layers in order
         for layer_name in self.layer_order:
             # Skip bong layer in main menu
-            if layer_name == "bong" and self.current_menu == "main":
+            if (layer_name == "bong" and self.current_menu == "main"):
                 continue
             self.draw_layer(tmx_map, layer_name)
         
@@ -212,6 +226,7 @@ class MenuManager:
                 action = button["action"]
                 
                 if action == "start_game":
+                    print("[DEBUG] Starting game transition")
                     return "start_game"
                 elif action in ["rules", "developers"]:
                     if self.debug_mode:

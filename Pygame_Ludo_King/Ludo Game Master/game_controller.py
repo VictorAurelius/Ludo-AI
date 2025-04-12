@@ -26,35 +26,52 @@ def run_game():
     while True:
         try:
             # Chạy màn hình chính và nhận tên người chơi
+            print("[DEBUG] Creating new MainBoard instance")
             menu = MainBoard()
+            print("[DEBUG] Running MainBoard")
             player_names = menu.run()
+            print(f"[DEBUG] MainBoard run completed, player_names: {player_names}")
             
             if player_names:
                 # Đảm bảo main module được import lại mỗi lần để tái khởi tạo
                 try:
                     # Xóa module main từ sys.modules để đảm bảo nó được tải lại hoàn toàn
                     import sys
-                    if 'main' in sys.modules:
-                        del sys.modules['main']
-                    if 'Players' in sys.modules:
-                        del sys.modules['Players']
-                    if 'Pawns' in sys.modules:
-                        del sys.modules['Pawns']
-                    if 'States' in sys.modules:
-                        del sys.modules['States']
-                    if 'Stars' in sys.modules:
-                        del sys.modules['Stars']
-                    if 'alert_manager' in sys.modules:  # Thêm dòng này để reload AlertManager
+                    modules_to_reload = ['main', 'Players', 'Pawns', 'States', 'Stars', 'menu_manager']
+                    print("[DEBUG] Cleaning up modules for reload:")
+                    for module in modules_to_reload:
+                        if module in sys.modules:
+                            print(f"[DEBUG] Removing module: {module}")
+                            del sys.modules[module]
+                    if 'alert_manager' in sys.modules:
+                        print("[DEBUG] Removing alert_manager module")
                         del sys.modules['alert_manager']
+                    
+                    print("[DEBUG] Clearing game state and reinitializing")
+                    # Initialize sprite groups
+                    global redPawn, bluePawn, yellowPawn, greenPawn, allSprites
+                    
+                    # Create new sprite groups
+                    from pygame.sprite import Group
+                    redPawn = Group()
+                    bluePawn = Group()
+                    yellowPawn = Group()
+                    greenPawn = Group()
+                    allSprites = Group()
+                    
+                    print("[DEBUG] New sprite groups initialized")
                         
                     # Chạy garbage collector để giải phóng bộ nhớ
                     gc.collect()
                         
                     # Tải lại tất cả các module liên quan
+                    print("[DEBUG] Reloading main module")
                     import main
                     
                     # Gọi main với tên người chơi đã nhập
+                    print("[DEBUG] Starting main game with player names")
                     result = main.main(player_names)
+                    print(f"[DEBUG] Game result: {result}")
                     
                     # Xử lý kết quả
                     if result == False:  # Người chơi muốn thoát game hoàn toàn

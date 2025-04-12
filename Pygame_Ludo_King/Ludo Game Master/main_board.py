@@ -185,8 +185,10 @@ class MainBoard:
         try:
             # Load TMX files
             logger.info("Starting TMX initialization")
+            print("[DEBUG] Initializing MainBoard TMX")
             
             # Define and resolve TMX paths
+            print("[DEBUG] Resolving TMX paths")
             tmx_paths = {
                 name: self.resolve_path(f"UI/{name}.tmx")
                 for name in ["main_menu", "sp_menu"]
@@ -204,6 +206,7 @@ class MainBoard:
                 except (ValueError, TypeError):
                     return 0
 
+            # Update type handlers to properly handle floating point values
             pytmx.pytmx.types.update({
                 'x': float,
                 'y': float,
@@ -226,13 +229,22 @@ class MainBoard:
                 'infinite': bool,
                 'nextlayerid': safe_int,
                 'nextobjectid': safe_int,
-                # Add any other numeric properties that might contain decimals
+                # Ensure all offset and position values are handled as floats
                 'parallaxx': float,
                 'parallaxy': float,
-                'offsetx': float,
-                'offsety': float,
+                'offsetx': str,  # Keep as string to avoid conversion issues
+                'offsety': str,  # Keep as string to avoid conversion issues
                 'opacity': float,
             })
+            
+            # Override pytmx's internal float parsing
+            def parse_float(value):
+                try:
+                    return float(value)
+                except (ValueError, TypeError):
+                    return 0.0
+            
+            pytmx.pytmx.convert_to_float = parse_float
 
             def verify_tileset_paths(tmx_file):
                 """Verify that all tilesets referenced in TMX file exist"""
@@ -277,9 +289,12 @@ class MainBoard:
                 
                 try:
                     # Load TMX
+                    print(f"[DEBUG] Loading TMX file: {path}")
                     tmx = pytmx.load_pygame(path)
+                    print("[DEBUG] TMX loaded successfully")
                     
                     # Verify required layers
+                    print("[DEBUG] Verifying required layers")
                     found_layers = {l.name for l in tmx.visible_layers if hasattr(l, 'name')}
                     required_layers = set(config['required_layers'])
                     missing = required_layers - found_layers
@@ -298,6 +313,15 @@ class MainBoard:
                 # Store TMX data and create background
                 self.tmx_data[name] = tmx
                 logger.info(f"Creating background for {name}.tmx...")
+                print(f"[DEBUG] Creating background for {name}.tmx")
+                
+                # Check layer configurations before rendering
+                for layer in tmx.visible_layers:
+                    if hasattr(layer, 'name'):
+                        print(f"[DEBUG] Layer '{layer.name}' properties:")
+                        print(f"  - offset: ({getattr(layer, 'offsetx', 0)}, {getattr(layer, 'offsety', 0)})")
+                        print(f"  - visible: {getattr(layer, 'visible', True)}")
+                
                 self.backgrounds[name] = self.render_tmx(tmx)
             
             # Set up references for backward compatibility
