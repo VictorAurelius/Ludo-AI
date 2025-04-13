@@ -29,27 +29,27 @@ class MenuManager:
         
         # Font for drawing text
         try:
-            # Thử sử dụng các font đẹp có sẵn trong hệ thống
-            self.title_font = pygame.font.SysFont("impact", 90)  # Font mạnh mẽ hơn cho tiêu đề LUDO
-            self.menu_font = pygame.font.SysFont("arial", 48)
-            self.content_font = pygame.font.SysFont("arial", 36)
+            # Sử dụng font phù hợp và đẹp hơn
+            self.title_font = pygame.font.SysFont("impact", 90)  # Font mạnh mẽ cho tiêu đề LUDO
+            self.menu_font = pygame.font.SysFont("arial", 42, bold=True)  # Font for buttons, bold để nổi bật
+            self.content_font = pygame.font.SysFont("arial", 36)  # Font for content text
             
-            # Kiểm tra xem font có được tạo thành công không
-            if not self.title_font:
+            # Kiểm tra font đã được tạo thành công
+            if not self.title_font or not self.menu_font:
                 raise Exception("Không thể tạo font")
                 
         except Exception as e:
             print(f"Không thể tải font chữ, sử dụng font mặc định: {e}")
             # Fallback to default fonts
             self.title_font = pygame.font.Font(None, 90)
-            self.menu_font = pygame.font.Font(None, 48)
+            self.menu_font = pygame.font.Font(None, 42)
             self.content_font = pygame.font.Font(None, 36)
         
         # Colors
-        self.NORMAL_COLOR = (255, 255, 255)
-        self.HOVER_COLOR = (255, 255, 0)
-        self.CLICK_COLOR = (255, 160, 0)
-        self.TITLE_COLOR = (0, 0, 0)  # Màu đen cho tiêu đề LUDO
+        self.NORMAL_COLOR = (0, 0, 0)  # Màu đen cho text thường
+        self.HOVER_COLOR = (255, 165, 0)  # Màu cam khi hover
+        self.CLICK_COLOR = (220, 20, 60)  # Màu đỏ khi click
+        self.TITLE_COLOR = (0, 0, 0)  # Màu đen cho tiêu đề
         
         # Layer configurations with explicit ordering and properties
         self.layer_config = {
@@ -70,10 +70,10 @@ class MenuManager:
         # Menu content matching TMX banner positions
         self.menu_text = {
             "main": {
-                "title": {"text": "LUDO", "pos": (400, 125)},  # Điều chỉnh vị trí y từ 150 xuống 125 để khớp với banner
+                "title": {"text": "LUDO", "pos": (400, 125)},  # Tiêu đề căn chỉnh với banner
                 "buttons": [
-                    {"text": "Chơi game", "pos": (400, 400)},
-                    {"text": "Luật chơi", "pos": (400, 470)},
+                    {"text": "Chơi game", "pos": (400, 400)},  # Button vị trí tương ứng với layer button 
+                    {"text": "Luật chơi", "pos": (400, 470)},  
                     {"text": "Nhà phát triển", "pos": (400, 540)},
                     {"text": "Thoát", "pos": (400, 610)}
                 ]
@@ -107,13 +107,13 @@ class MenuManager:
             }
         }
 
-        # Button click areas
+        # Button click areas matched with TMX button layer
         self.buttons = {
             "main": [
-                {"rect": pygame.Rect(300, 380, 200, 40), "action": "start_game", "hover": False},
-                {"rect": pygame.Rect(300, 450, 200, 40), "action": "rules", "hover": False},
-                {"rect": pygame.Rect(300, 520, 200, 40), "action": "developers", "hover": False},
-                {"rect": pygame.Rect(300, 590, 200, 40), "action": "exit", "hover": False}
+                {"rect": pygame.Rect(320, 380, 160, 40), "action": "start_game", "hover": False},  # Điều chỉnh vị trí các button
+                {"rect": pygame.Rect(320, 450, 160, 40), "action": "rules", "hover": False},       # để khớp với layer button trong TMX
+                {"rect": pygame.Rect(320, 520, 160, 40), "action": "developers", "hover": False},
+                {"rect": pygame.Rect(320, 590, 160, 40), "action": "exit", "hover": False}
             ],
             "rules": [
                 {"rect": pygame.Rect(300, 590, 200, 40), "action": "main", "hover": False}
@@ -186,7 +186,7 @@ class MenuManager:
         # Draw all layers in order
         for layer_name in self.layer_order:
             # Skip bong layer in main menu
-            if layer_name == "bong" and self.current_menu == "main":
+            if (layer_name == "bong" and self.current_menu == "main"):
                 continue
             self.draw_layer(tmx_map, layer_name)
         

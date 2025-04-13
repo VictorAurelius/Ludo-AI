@@ -424,21 +424,13 @@ class MainBoard:
                     break
             
             if ban_layer:
-                # Use ban layer position - adjust based on layer's content
-                # Layer "ban" has offset (9.33333, -90.6667) and starts at row 6
-                # Find center position of the banner (approximately at row 8, columns 12-15)
+                # Sử dụng vị trí của layer "ban" trong TMX
                 ban_offset_x = getattr(ban_layer, 'offsetx', 0) or 0
                 ban_offset_y = getattr(ban_layer, 'offsety', 0) or 0
                 
-                # Calculate center position based on banner in layer "ban"
-                # Banner starts at row 6 and column 6 and extends to column 24
-                banner_center_x = (6 + 24) / 2 * self.main_menu_tmx.tilewidth + ban_offset_x
-                banner_row = 8  # Use row 8 (where tile IDs 140-141 are located)
-                banner_y = banner_row * self.main_menu_tmx.tileheight + ban_offset_y
-                
-                # Position title at banner position with slight adjustment
-                title_x = 420  # Center horizontally
-                title_y = 60  # Position at top portion of banner (adjusted from -90)
+                # Position title at banner position
+                title_x = 400  # Center horizontally
+                title_y = 125  # Căn chỉnh với banner
             else:
                 # Fallback position
                 title_x = 400
@@ -446,25 +438,41 @@ class MainBoard:
                 print("Warning: 'ban' layer not found in TMX, using fallback position")
             
             self.screen.blit(title, (title_x - title.get_width() // 2, title_y))
+            
+            # Tìm layer "button" trong TMX để căn chỉnh nút chính xác
+            button_layer = None
+            for layer in self.main_menu_tmx.visible_layers:
+                if hasattr(layer, 'name') and layer.name == "button":
+                    button_layer = layer
+                    break
+            
+            # Lấy offset của layer button nếu tìm thấy
+            button_offset_x = getattr(button_layer, 'offsetx', 0) or 0
+            button_offset_y = getattr(button_layer, 'offsety', 0) or 0
+            
+            # Định nghĩa nội dung các button
+            button_text = {
+                "play": "Chơi",
+                "rules": "Luật chơi",
+                "developers": "Nhà phát triển",
+                "quit": "Thoát",
+                "ok": "Đồng ý",
+                "back": "Quay lại"
+            }
+            
+            # Vẽ các button với vị trí căn giữa
+            # Sử dụng small_font đã cập nhật ở constructor
+            for btn_text, btn_rect in self.buttons.items():
+                if btn_text not in ["ok", "back"]:
+                    text = self.small_font.render(button_text[btn_text], True, (0, 0, 0))
+                    # Căn giữa text trên button
+                    text_x = btn_rect.centerx - text.get_width() // 2
+                    text_y = btn_rect.centery - text.get_height() // 2
+                    self.screen.blit(text, (text_x, text_y))
+                    
         except Exception as e:
-            print(f"Error rendering title: {e}")
-        button_text = {
-            "play": "Chơi",
-            "rules": "Luật chơi",
-            "developers": "Nhà phát triển",
-            "quit": "Thoát",
-            "ok": "Đồng ý",
-            "back": "Quay lại"
-        }
-        for btn_text, btn_rect in self.buttons.items():
-            if btn_text not in ["ok", "back"]:
-                # Don't draw button borders as they're part of the TMX
-                text = self.small_font.render(button_text[btn_text], True, (0, 0, 0))  # Black text for better visibility
-                # Tính toán vị trí để căn giữa text
-                text_width = text.get_width()
-                text_x = btn_rect.centerx - text_width // 2
-                text_y = btn_rect.centery - text.get_height() // 2
-                self.screen.blit(text, (text_x, text_y))
+            print(f"Error rendering menu: {e}")
+            
         pygame.display.flip()
 
     def draw_developers(self):
