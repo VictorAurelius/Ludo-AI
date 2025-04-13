@@ -28,14 +28,28 @@ class MenuManager:
             raise
         
         # Font for drawing text
-        self.title_font = pygame.font.Font(None, 72)
-        self.menu_font = pygame.font.Font(None, 48)
-        self.content_font = pygame.font.Font(None, 36)
+        try:
+            # Thử sử dụng các font đẹp có sẵn trong hệ thống
+            self.title_font = pygame.font.SysFont("impact", 90)  # Font mạnh mẽ hơn cho tiêu đề LUDO
+            self.menu_font = pygame.font.SysFont("arial", 48)
+            self.content_font = pygame.font.SysFont("arial", 36)
+            
+            # Kiểm tra xem font có được tạo thành công không
+            if not self.title_font:
+                raise Exception("Không thể tạo font")
+                
+        except Exception as e:
+            print(f"Không thể tải font chữ, sử dụng font mặc định: {e}")
+            # Fallback to default fonts
+            self.title_font = pygame.font.Font(None, 90)
+            self.menu_font = pygame.font.Font(None, 48)
+            self.content_font = pygame.font.Font(None, 36)
         
         # Colors
         self.NORMAL_COLOR = (255, 255, 255)
         self.HOVER_COLOR = (255, 255, 0)
         self.CLICK_COLOR = (255, 160, 0)
+        self.TITLE_COLOR = (0, 0, 0)  # Màu đen cho tiêu đề LUDO
         
         # Layer configurations with explicit ordering and properties
         self.layer_config = {
@@ -56,7 +70,7 @@ class MenuManager:
         # Menu content matching TMX banner positions
         self.menu_text = {
             "main": {
-                "title": {"text": "LUDO", "pos": (400, 150)},
+                "title": {"text": "LUDO", "pos": (400, 125)},  # Điều chỉnh vị trí y từ 150 xuống 125 để khớp với banner
                 "buttons": [
                     {"text": "Chơi game", "pos": (400, 400)},
                     {"text": "Luật chơi", "pos": (400, 470)},

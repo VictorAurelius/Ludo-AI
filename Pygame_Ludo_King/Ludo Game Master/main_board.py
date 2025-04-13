@@ -357,8 +357,26 @@ class MainBoard:
             )
             
         # Initialize fonts for Vietnamese text
-        self.font = pygame.font.SysFont("tahoma", 74)
-        self.small_font = pygame.font.SysFont("tahoma", 36)
+        try:
+            # Sử dụng font đẹp phù hợp với game
+            self.font = pygame.font.SysFont("impact", 74)  # Font lớn cho tiêu đề
+            self.small_font = pygame.font.SysFont("arial", 36)  # Font nhỏ cho button và text
+            
+            # Fonts phụ cho các phần khác
+            self.error_font = pygame.font.SysFont("arial", 24, bold=True)
+            self.content_font = pygame.font.SysFont("arial", 28)
+            
+            # Kiểm tra font đã được tải đúng chưa
+            if not self.font:
+                raise Exception("Không thể tải font Impact")
+        except Exception as e:
+            print(f"Lỗi khi tải font: {e}")
+            # Fallback to default fonts
+            self.font = pygame.font.Font(None, 74)
+            self.small_font = pygame.font.Font(None, 36)
+            self.error_font = pygame.font.Font(None, 24)
+            self.content_font = pygame.font.Font(None, 28)
+        
         # Button positions aligned with TMX button layer
         self.buttons = {
             "play": pygame.Rect(250, 300, 250, 50),      # Wider buttons to match TMX
@@ -406,9 +424,21 @@ class MainBoard:
                     break
             
             if ban_layer:
-                # Use ban layer position
-                title_x = 400  # Center of screen
-                title_y = 150  # Adjust based on ban layer position
+                # Use ban layer position - adjust based on layer's content
+                # Layer "ban" has offset (9.33333, -90.6667) and starts at row 6
+                # Find center position of the banner (approximately at row 8, columns 12-15)
+                ban_offset_x = getattr(ban_layer, 'offsetx', 0) or 0
+                ban_offset_y = getattr(ban_layer, 'offsety', 0) or 0
+                
+                # Calculate center position based on banner in layer "ban"
+                # Banner starts at row 6 and column 6 and extends to column 24
+                banner_center_x = (6 + 24) / 2 * self.main_menu_tmx.tilewidth + ban_offset_x
+                banner_row = 8  # Use row 8 (where tile IDs 140-141 are located)
+                banner_y = banner_row * self.main_menu_tmx.tileheight + ban_offset_y
+                
+                # Position title at banner position with slight adjustment
+                title_x = 420  # Center horizontally
+                title_y = 60  # Position at top portion of banner (adjusted from -90)
             else:
                 # Fallback position
                 title_x = 400
@@ -676,7 +706,7 @@ class MainBoard:
     def run(self):
         while True:
             result = self.handle_events()
-            if result:  # Nếu handle_events trả về kết quả (tức là tên người chơi)
+            if (result):  # Nếu handle_events trả về kết quả (tức là tên người chơi)
                 return result  # Trả về tên người chơi cho mã gọi
                 
             if self.show_rules:
