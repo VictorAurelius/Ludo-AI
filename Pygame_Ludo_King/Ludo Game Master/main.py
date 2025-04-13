@@ -114,26 +114,63 @@ def load_game_assets():
 
 def load_map():
     """Load and render the game map"""
-    map_surface = pygame.Surface((725, 725))
-    game_map = load_pygame('mapfinal/mapludo.tmx')
-    for layer in game_map.visible_layers:
-        for x, y, gid in layer:
-            tile = game_map.get_tile_image_by_gid(gid)
-            if tile:
-                map_surface.blit(tile, (x * game_map.tilewidth, y * game_map.tileheight))
-    return map_surface
-
+    try:
+        print("[DEBUG] Loading game map from mapfinal/mapludo.tmx")
+        map_path = 'mapfinal/mapludo.tmx'
+        if not os.path.exists(map_path):
+            raise FileNotFoundError(f"Map file not found: {map_path}")
+            
+        map_surface = pygame.Surface((725, 725))
+        game_map = load_pygame(map_path)
+        
+        print("[DEBUG] Rendering map layers")
+        layer_count = sum(1 for _ in game_map.visible_layers)
+        print(f"[DEBUG] Found {layer_count} visible layers")
+        
+        for layer in game_map.visible_layers:
+            layer_name = getattr(layer, 'name', 'unnamed')
+            print(f"[DEBUG] Processing layer: {layer_name}")
+            for x, y, gid in layer:
+                tile = game_map.get_tile_image_by_gid(gid)
+                if tile:
+                    pos_x = x * game_map.tilewidth
+                    pos_y = y * game_map.tileheight
+                    
+                    # Apply layer offsets if they exist
+                    if hasattr(layer, 'offsetx'):
+                        pos_x += float(getattr(layer, 'offsetx', 0))
+                    if hasattr(layer, 'offsety'):
+                        pos_y += float(getattr(layer, 'offsety', 0))
+                        
+                    map_surface.blit(tile, (pos_x, pos_y))
+                    
+        print("[DEBUG] Game map loaded successfully")
+        return map_surface
+    except Exception as e:
+        print(f"[ERROR] Failed to load game map: {e}")
+        raise
 def init_game_variables():
     """Initialize or reset all game variables"""
     global roll_button_enabled, can_move, dice_animating, showing_dialog
     global current_dice1, current_dice2, dice_num1, dice_num2, finished_players
-    global dice_images, statekpr
+    global dice_images, statekpr, bgBoard
     
+    print("[DEBUG] Initializing game variables")
+    # Reset all game state variables
     roll_button_enabled = True
     can_move = False
     dice_animating = False
     showing_dialog = False
     finished_players = []
+    
+    # Load the game board
+    print("[DEBUG] Loading game board in init_game_variables")
+    try:
+        bgBoard = load_map()
+        print("[DEBUG] Game board loaded successfully")
+    except Exception as e:
+        print(f"[ERROR] Failed to load game board: {e}")
+        return False
     
     if dice_images:
         current_dice1 = dice_images[0]
@@ -177,10 +214,11 @@ def draw_dialog(win):
     no_text = vn_font.render(u"Không", True, no_color)
     win.blit(yes_text, (425, 255))
     win.blit(no_text, (540, 255))
-
 def handle_menu():
     """Handle menu state"""
-    global menu_manager
+    # All globals declared at start
+    global menu_manager, bgBoard
+    
     
     if menu_manager is None:
         menu_manager = MenuManager(win)
@@ -203,10 +241,11 @@ def handle_menu():
     menu_manager.draw()
     draw_sound_button()
     return True
-
 def handle_game_events():
     """Handle game state events"""
-    global showing_dialog
+    # All globals declared at start
+    global showing_dialog, bgBoard
+    
     
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -230,7 +269,11 @@ def handle_game_events():
 
 def handle_game():
     """Handle game state"""
-    global statekpr
+    global statekpr, bgBoard
+    
+    if bgBoard is None:
+        print("[DEBUG] Reloading game board")
+        bgBoard = load_map()
     
     win.blit(bgBoard, (0, 0))
     
@@ -247,10 +290,11 @@ def handle_game():
         draw_dialog(win)
     
     return True
-
 def main(player_names=None):
     """Main game loop"""
-    global current_game_state, menu_manager, statekpr
+    # All globals declared at start
+    global current_game_state, menu_manager, statekpr, bgBoard
+    
     
     print(f"[DEBUG] Starting main with player_names: {player_names}")
     clock = pygame.time.Clock()
@@ -264,7 +308,14 @@ def main(player_names=None):
             result = handle_menu()
             if result == "start_game":
                 print("[DEBUG] Transitioning from menu to game")
-                current_game_state = GAME_STATE_PLAYING
+                # Load game board before state transition
+                try:
+                    bgBoard = load_map()
+                    print("[DEBUG] Game board loaded successfully")
+                    current_game_state = GAME_STATE_PLAYING
+                except Exception as e:
+                    print(f"[ERROR] Failed to load game board: {e}")
+                    return False
             elif not result:
                 print("[DEBUG] Exiting game")
                 running = False
@@ -274,9 +325,11 @@ def main(player_names=None):
             result = handle_game()
             if result == "menu":
                 print("[DEBUG] Transitioning from game to menu")
-                # Re-initialize menu manager to ensure clean state
-                global menu_manager
+                # Clean up game state
                 menu_manager = None
+                bgBoard = None
+                # Reset game state
+                init_game_variables()
                 current_game_state = GAME_STATE_MENU
             elif not result:
                 print("[DEBUG] Exiting game")
