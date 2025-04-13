@@ -358,17 +358,50 @@ class MainBoard:
             
         # Initialize fonts for Vietnamese text
         try:
-            # Sử dụng font đẹp phù hợp với game
-            self.font = pygame.font.SysFont("impact", 74)  # Font lớn cho tiêu đề
-            self.small_font = pygame.font.SysFont("arial", 36)  # Font nhỏ cho button và text
+            # Load a font with better Vietnamese support
+            font_path = os.path.join("fonts", "arial.ttf")  # Arial has good Vietnamese support
+            
+            # Try to find the best alternative font on the system
+            system_fonts = [
+                "arial", "segoeui", "tahoma", "calibri",  # Common fonts with Vietnamese support
+                "notosans", "roboto", "times new roman"
+            ]
+            
+            # Check if the font file already exists
+            if os.path.exists(font_path):
+                self.font = pygame.font.Font(font_path, 74)  # Font for title/banner
+                self.small_font = pygame.font.Font(font_path, 36)  # Same font for buttons
+                self.content_font = pygame.font.Font(font_path, 28)  # Font for content
+                print("Loaded font from file:", font_path)
+            else:
+                # Create fonts directory if it doesn't exist
+                os.makedirs("fonts", exist_ok=True)
+                
+                # Try system fonts that typically have good Vietnamese support
+                font_loaded = False
+                for font_name in system_fonts:
+                    try:
+                        self.font = pygame.font.SysFont(font_name, 74)
+                        test_render = self.font.render("Tiếng Việt", True, (0,0,0))
+                        if test_render:
+                            self.small_font = pygame.font.SysFont(font_name, 36)
+                            self.content_font = pygame.font.SysFont(font_name, 28)
+                            print(f"Using system font: {font_name}")
+                            font_loaded = True
+                            break
+                    except:
+                        continue
+                
+                if not font_loaded:
+                    # Fallback to default font
+                    print("No suitable Vietnamese font found, using default")
+                    self.font = pygame.font.Font(None, 74)
+                    self.small_font = pygame.font.Font(None, 36)
+                    self.content_font = pygame.font.Font(None, 28)
             
             # Fonts phụ cho các phần khác
             self.error_font = pygame.font.SysFont("arial", 24, bold=True)
-            self.content_font = pygame.font.SysFont("arial", 28)
             
-            # Kiểm tra font đã được tải đúng chưa
-            if not self.font:
-                raise Exception("Không thể tải font Impact")
         except Exception as e:
             print(f"Lỗi khi tải font: {e}")
             # Fallback to default fonts
@@ -429,8 +462,8 @@ class MainBoard:
                 ban_offset_y = getattr(ban_layer, 'offsety', 0) or 0
                 
                 # Position title at banner position
-                title_x = 400  # Center horizontally
-                title_y = 125  # Căn chỉnh với banner
+                title_x = 420  # Center horizontally
+                title_y = 60  # Căn chỉnh với banner
             else:
                 # Fallback position
                 title_x = 400

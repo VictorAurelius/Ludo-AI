@@ -29,17 +29,35 @@ class MenuManager:
         
         # Font for drawing text
         try:
-            # Sử dụng font phù hợp và đẹp hơn
-            self.title_font = pygame.font.SysFont("impact", 90)  # Font mạnh mẽ cho tiêu đề LUDO
-            self.menu_font = pygame.font.SysFont("arial", 42, bold=True)  # Font for buttons, bold để nổi bật
-            self.content_font = pygame.font.SysFont("arial", 36)  # Font for content text
+            # Try to find the best font with Vietnamese support
+            system_fonts = [
+                "arial", "segoeui", "tahoma", "calibri",  # Common fonts with Vietnamese support
+                "notosans", "roboto", "times new roman"
+            ]
             
-            # Kiểm tra font đã được tạo thành công
-            if not self.title_font or not self.menu_font:
-                raise Exception("Không thể tạo font")
+            font_loaded = False
+            for font_name in system_fonts:
+                try:
+                    self.title_font = pygame.font.SysFont(font_name, 90)
+                    test_render = self.title_font.render("Tiếng Việt", True, (0,0,0))
+                    if test_render:
+                        self.menu_font = pygame.font.SysFont(font_name, 42)
+                        self.content_font = pygame.font.SysFont(font_name, 36)
+                        print(f"Using system font: {font_name}")
+                        font_loaded = True
+                        break
+                except:
+                    continue
+            
+            if not font_loaded:
+                # Fallback to default font
+                print("No suitable Vietnamese font found, using default")
+                self.title_font = pygame.font.Font(None, 90)
+                self.menu_font = pygame.font.Font(None, 42)
+                self.content_font = pygame.font.Font(None, 36)
                 
         except Exception as e:
-            print(f"Không thể tải font chữ, sử dụng font mặc định: {e}")
+            print(f"Could not load font: {e}")
             # Fallback to default fonts
             self.title_font = pygame.font.Font(None, 90)
             self.menu_font = pygame.font.Font(None, 42)
