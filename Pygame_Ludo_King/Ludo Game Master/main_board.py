@@ -154,12 +154,12 @@ class MainBoard:
             
             # Luôn hiển thị text đã nhập
             name_text = input_font.render(self.player_names[i], True, (0, 0, 0))
-            self.screen.blit(name_text, (100 + self.player_number_spacing, y_offset))
+            self.screen.blit(name_text, (100 + self.player_number_spacing, y_offset + 5))
             
             # Hiển thị dấu nháy nếu đây là ô đang được chọn
             if i == self.active_input and pygame.time.get_ticks() % 1000 < 500:
                 cursor_pos = 100 + self.player_number_spacing + name_text.get_width()
-                pygame.draw.line(self.screen, (0, 0, 0), (cursor_pos, y_offset), (cursor_pos, y_offset + 30), 2)
+                pygame.draw.line(self.screen, (0, 0, 0), (cursor_pos, y_offset + 5), (cursor_pos, y_offset + 35), 2)
             
             y_offset += 100
 
@@ -338,7 +338,7 @@ class MainBoard:
             elif event.type == pygame.KEYDOWN and self.show_name_input:
                 if event.key == pygame.K_BACKSPACE:
                     self.player_names[self.active_input] = self.player_names[self.active_input][:-1]
-                else:
+                elif len(self.player_names[self.active_input]) < 10:  # Giới hạn tối đa 10 ký tự
                     self.player_names[self.active_input] += event.unicode
         
         return None  # Không có kết quả đặc biệt
