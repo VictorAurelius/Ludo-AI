@@ -112,20 +112,38 @@ class MainBoard:
     def draw_name_input(self):
         # Vẽ background từ bản đồ start menu
         self.screen.blit(self.start_map_layer, (0, 0))
+        
         prompt = self.small_font.render("START A NEW GAME", True, (0, 0, 0))
-        self.screen.blit(prompt, (50, 50))
+        self.screen.blit(prompt, (240, 50))
+        
         y_offset = 100
         for i in range(4):
             text = self.small_font.render(f"Player {i+1}: {self.player_names[i]}", True, (0, 0, 0))
             self.screen.blit(text, (50, y_offset))
             y_offset += 50
-        # Vẽ nút Đồng ý
-        pygame.draw.rect(self.screen, (0, 0, 0), self.buttons["ok"], 2)
-        ok_text = self.small_font.render("START", True, (0, 0, 0))
-        text_x = self.buttons["ok"].centerx - ok_text.get_width() // 2
-        text_y = self.buttons["ok"].centery - ok_text.get_height() // 2
+
+        # Thêm khả năng chỉnh sửa vị trí nút ok
+        ok_button_x = 425  # Giá trị mặc định cho vị trí x của nút ok
+        ok_button_y = 715  # Giá trị mặc định cho vị trí y của nút ok
+
+        # Thêm khả năng tùy chỉnh kích thước và font chữ của nút ok
+        ok_button_width = 250  # Giá trị mặc định cho chiều rộng của nút ok
+        ok_button_height = 60  # Giá trị mặc định cho chiều cao của nút ok
+        ok_button_font_size = 27  # Giá trị mặc định cho kích thước font chữ của nút ok
+
+        # Cập nhật vùng bấm của nút ok với kích thước mới
+        ok_button_rect = pygame.Rect(ok_button_x, ok_button_y, ok_button_width, ok_button_height)
+
+        # Vẽ nút Đồng ý với kích thước và font chữ được tùy chỉnh
+        ok_font = pygame.font.SysFont("tahoma", ok_button_font_size)
+        ok_text = ok_font.render("START", True, (0, 0, 0))
+        text_x = ok_button_rect.centerx - ok_text.get_width() // 2
+        text_y = ok_button_rect.centery - ok_text.get_height() // 2
         self.screen.blit(ok_text, (text_x, text_y))
-        
+
+        # Cập nhật vùng bấm của nút ok
+        self.buttons["ok"] = ok_button_rect
+
         # Thêm khả năng chỉnh sửa vị trí nút back
         back_button_x = 130  # Giá trị mặc định cho vị trí x của nút back
         back_button_y = 715  # Giá trị mặc định cho vị trí y của nút back
