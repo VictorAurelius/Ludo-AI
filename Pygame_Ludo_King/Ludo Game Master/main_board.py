@@ -14,11 +14,13 @@ class MainBoard:
             "rules": pygame.Rect(330, 410, 200, 50),
             "quit": pygame.Rect(340, 645, 200, 50),
             "ok": pygame.Rect(350, 500, 200, 50),
-            "back": pygame.Rect(50, 500, 200, 50)
+            "back": pygame.Rect(50, 500, 200, 50),
+            "developer": pygame.Rect(330, 530, 200, 50)  # Thêm nút Developers
         }
         self.player_names = ["", "", "", ""]
         self.show_name_input = False
         self.show_rules = False
+        self.show_developers = False  # Add a flag for the Developers section
         self.active_input = 0
 
         # Tải bản đồ từ file .tmx
@@ -79,7 +81,8 @@ class MainBoard:
             "rules": "Rules",
             "quit": "Quit",
             "ok": "Start",
-            "back": "Back"
+            "back": "Back",
+            "developer": "Developers",
         }
         for btn_text, btn_rect in self.buttons.items():
             if btn_text not in ["ok", "back"]:
@@ -90,16 +93,8 @@ class MainBoard:
                 text_x = btn_rect.centerx - text_width // 2
                 text_y = btn_rect.centery - text.get_height() // 2
                 self.screen.blit(text, (text_x, text_y))
-        self.draw_team_members()
         pygame.display.flip()
 
-    def draw_team_members(self):
-        members = [u"- Nguyễn Văn Kiệt", u"- Nguyễn Tài Nhất", u"- Nguyễn Minh Quyết"]
-        y_offset = 450
-        for member in members:
-            text = self.small_font.render(member, True, (0, 0, 0))
-            self.screen.blit(text, (50, y_offset))
-            y_offset += 45
 
     def draw_name_input(self):
         # Vẽ background từ bản đồ start menu
@@ -150,13 +145,44 @@ class MainBoard:
         
         pygame.display.flip()
 
+    def draw_developers(self):
+        # Vẽ background từ bản đồ rules
+        self.screen.blit(self.rules_map_layer, (0, 0))
+        y_offset = 50
+        title = self.font.render("Developers", True, (0, 0, 0))
+        self.screen.blit(title, (250, 20))
+
+        developers = [
+            "- Nguyen Van Kiet",
+            "- Nguyen Tai Nhat",
+            "- Nguyen Minh Quyet"
+        ]
+
+        y_offset = 100
+        for dev in developers:
+            text = self.small_font.render(dev, True, (0, 0, 0))
+            self.screen.blit(text, (50, y_offset))
+            y_offset += 50
+
+        # Draw back button
+        pygame.draw.rect(self.screen, (0, 0, 0), self.buttons["back"], 2)
+        back_text = self.small_font.render("BACK", True, (0, 0, 0))
+        text_x = self.buttons["back"].centerx - back_text.get_width() // 2
+        text_y = self.buttons["back"].centery - back_text.get_height() // 2
+        self.screen.blit(back_text, (text_x, text_y))
+
+        pygame.display.flip()
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if self.show_rules:
+                if self.show_developers:
+                    if self.buttons["back"].collidepoint(event.pos):
+                        self.show_developers = False
+                elif self.show_rules:
                     if self.buttons["back"].collidepoint(event.pos):
                         self.show_rules = False
                 elif self.show_name_input:
@@ -173,7 +199,9 @@ class MainBoard:
                             if pygame.Rect(50, 100 + i * 50, 300, 50).collidepoint(event.pos):
                                 self.active_input = i
                 else:
-                    if self.buttons["play"].collidepoint(event.pos):
+                    if self.buttons["developer"].collidepoint(event.pos):
+                        self.show_developers = True
+                    elif self.buttons["play"].collidepoint(event.pos):
                         self.show_name_input = True
                     elif self.buttons["rules"].collidepoint(event.pos):
                         self.show_rules = True
@@ -198,6 +226,8 @@ class MainBoard:
                 self.draw_rules()
             elif self.show_name_input:
                 self.draw_name_input()
+            elif self.show_developers:
+                self.draw_developers()
             else:
                 self.draw_main_menu()
 
