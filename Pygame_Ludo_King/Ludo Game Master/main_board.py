@@ -62,9 +62,11 @@ class MainBoard:
         rules_text_unicode = [
             u"",
             u"1. Each player has 4 pieces",
-            u"2. Roll a 6 to move a piece out",
+            u"2. Roll out a number greater",
+            u"than 10 to move a piece out",
             u"3. Move pieces based on dice roll",
-            u"4. Capture opponent's piece on the same spot",
+            u"4. Capture opponent's piece",
+            u"on the same spot",
             u"5. Special effects on star tiles",
             u"6. Bring all 4 pieces home to win"
         ]
@@ -124,24 +126,44 @@ class MainBoard:
     def draw_rules(self):
         # Vẽ background từ bản đồ rules
         self.screen.blit(self.rules_map_layer, (0, 0))
-        y_offset = 50
-        
+        y_offset = 200  # Tăng giá trị ban đầu để các dòng bắt đầu thấp hơn
+        initial_offset = 50  # Giá trị cố định để tăng vị trí dòng đầu tiên
+        y_offset += initial_offset  # Chỉ tăng vị trí dòng đầu tiên
+
         # Vẽ tiêu đề
         title = self.font.render("Rules", True, (0, 0, 0))
-        self.screen.blit(title, (250, 20))
-        
-        # Vẽ từng dòng luật
+        self.screen.blit(title, (340, 100))
+
+        # Tạo font nhỏ hơn cho rules_text
+        small_rules_font = pygame.font.SysFont("tahoma", 24)
+
+        # Vẽ từng dòng luật với font nhỏ hơn
         for rule in self.rules_text:
-            text = self.small_font.render(rule, True, (0, 0, 0))
-            self.screen.blit(text, (50, y_offset))
-            y_offset += 40
+            text = small_rules_font.render(rule, True, (0, 0, 0))
+            self.screen.blit(text, (240, y_offset))
+            y_offset += 40  # Khoảng cách giữa các dòng không thay đổi
             
-        # Vẽ nút Quay lại
-        pygame.draw.rect(self.screen, (0, 0, 0), self.buttons["back"], 2)
-        back_text = self.small_font.render("BACK", True, (0, 0, 0))
-        text_x = self.buttons["back"].centerx - back_text.get_width() // 2
-        text_y = self.buttons["back"].centery - back_text.get_height() // 2
+        # Thêm khả năng chỉnh sửa vị trí nút back
+        back_button_x = 320  # Giá trị mặc định cho vị trí x của nút back
+        back_button_y = 720  # Giá trị mặc định cho vị trí y của nút back
+
+        # Thêm khả năng tùy chỉnh kích thước và font chữ của nút back
+        back_button_width = 250  # Giá trị mặc định cho chiều rộng của nút back
+        back_button_height = 60  # Giá trị mặc định cho chiều cao của nút back
+        back_button_font_size = 28  # Giá trị mặc định cho kích thước font chữ của nút back
+
+        # Cập nhật vùng bấm của nút back với kích thước mới
+        back_button_rect = pygame.Rect(back_button_x, back_button_y, back_button_width, back_button_height)
+
+        # Vẽ nút Quay lại với kích thước và font chữ được tùy chỉnh
+        back_font = pygame.font.SysFont("tahoma", back_button_font_size)
+        back_text = back_font.render("BACK", True, (0, 0, 0))
+        text_x = back_button_rect.centerx - back_text.get_width() // 2
+        text_y = back_button_rect.centery - back_text.get_height() // 2
         self.screen.blit(back_text, (text_x, text_y))
+
+        # Cập nhật vùng bấm của nút back
+        self.buttons["back"] = back_button_rect
         
         pygame.display.flip()
 
