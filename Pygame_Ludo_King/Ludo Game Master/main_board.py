@@ -86,15 +86,26 @@ class MainBoard:
             "back": "Back",
             "developer": "Developers",
         }
+        # Xóa đoạn vẽ text quit trùng lặp
         for btn_text, btn_rect in self.buttons.items():
-            if btn_text not in ["ok", "back"]:
-                
+            if btn_text not in ["ok", "back", "quit"]:
                 text = self.small_font.render(button_text[btn_text], True, (0, 0, 0))
                 # Tính toán vị trí để căn giữa text
                 text_width = text.get_width()
                 text_x = btn_rect.centerx - text_width // 2
                 text_y = btn_rect.centery - text.get_height() // 2
                 self.screen.blit(text, (text_x, text_y))
+
+        # Tùy chỉnh font chữ cho nút quit
+        quit_button_font_size = 28  # Giá trị mặc định cho kích thước font chữ của nút quit
+        quit_font = pygame.font.SysFont("tahoma", quit_button_font_size)
+
+        # Vẽ nút Quit với font chữ được tùy chỉnh
+        quit_text = quit_font.render(button_text["quit"], True, (0, 0, 0))
+        text_x = self.buttons["quit"].centerx - quit_text.get_width() // 2
+        text_y = self.buttons["quit"].centery - quit_text.get_height() // 2
+        self.screen.blit(quit_text, (text_x, text_y))
+
         pygame.display.flip()
 
 
@@ -172,7 +183,7 @@ class MainBoard:
         self.screen.blit(self.rules_map_layer, (0, 0))
         y_offset = 50
         title = self.font.render("Developers", True, (0, 0, 0))
-        self.screen.blit(title, (250, 20))
+        self.screen.blit(title, (250, 100))
 
         developers = [
             "- Nguyen Van Kiet",
@@ -180,18 +191,37 @@ class MainBoard:
             "- Nguyen Minh Quyet"
         ]
 
-        y_offset = 100
-        for dev in developers:
-            text = self.small_font.render(dev, True, (0, 0, 0))
-            self.screen.blit(text, (50, y_offset))
-            y_offset += 50
+        # Tạo font nhỏ hơn cho developers text
+        small_developers_font = pygame.font.SysFont("tahoma", 32)
 
-        # Draw back button
-        pygame.draw.rect(self.screen, (0, 0, 0), self.buttons["back"], 2)
-        back_text = self.small_font.render("BACK", True, (0, 0, 0))
-        text_x = self.buttons["back"].centerx - back_text.get_width() // 2
-        text_y = self.buttons["back"].centery - back_text.get_height() // 2
+        # Vẽ từng dòng developers với font nhỏ hơn và vị trí tùy chỉnh
+        y_offset = 300  # Tăng giá trị ban đầu để các dòng bắt đầu thấp hơn
+        for dev in developers:
+            text = small_developers_font.render(dev, True, (0, 0, 0))
+            self.screen.blit(text, (240, y_offset))
+            y_offset += 40  # Khoảng cách giữa các dòng không thay đổi
+
+        # Thêm khả năng chỉnh sửa vị trí nút back
+        back_button_x = 320  # Giá trị mặc định cho vị trí x của nút back
+        back_button_y = 720  # Giá trị mặc định cho vị trí y của nút back
+
+        # Thêm khả năng tùy chỉnh kích thước và font chữ của nút back
+        back_button_width = 250  # Giá trị mặc định cho chiều rộng của nút back
+        back_button_height = 60  # Giá trị mặc định cho chiều cao của nút back
+        back_button_font_size = 28  # Giá trị mặc định cho kích thước font chữ của nút back
+
+        # Cập nhật vùng bấm của nút back với kích thước mới
+        back_button_rect = pygame.Rect(back_button_x, back_button_y, back_button_width, back_button_height)
+
+        # Vẽ nút Quay lại với kích thước và font chữ được tùy chỉnh
+        back_font = pygame.font.SysFont("tahoma", back_button_font_size)
+        back_text = back_font.render("BACK", True, (0, 0, 0))
+        text_x = back_button_rect.centerx - back_text.get_width() // 2
+        text_y = back_button_rect.centery - back_text.get_height() // 2
         self.screen.blit(back_text, (text_x, text_y))
+
+        # Cập nhật vùng bấm của nút back
+        self.buttons["back"] = back_button_rect
 
         pygame.display.flip()
 
