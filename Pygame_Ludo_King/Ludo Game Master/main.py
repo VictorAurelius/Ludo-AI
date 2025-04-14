@@ -88,6 +88,56 @@ def draw_alert(win, text):
     text_rect = text_surface.get_rect(center=(winX // 2, y + 25))
     win.blit(text_surface, text_rect)
 
+def load_ranking():
+    """Tải background cho bảng xếp hạng từ file TMX"""
+    # Tạo surface cho bảng xếp hạng với kích thước 400x400
+    ranking_surface = pygame.Surface((400, 400))
+    
+    try:
+        # Load map từ file TMX
+        ranking_map = load_pygame('mapfinal/ranking.tmx')
+        
+        # Vẽ từng layer của map lên surface
+        for layer in ranking_map.visible_layers:
+            if hasattr(layer, "tiles"):
+                for x, y, gid in layer:
+                    tile = ranking_map.get_tile_image_by_gid(gid)
+                    if tile:
+                        ranking_surface.blit(tile, (x * ranking_map.tilewidth, 
+                                                  y * ranking_map.tileheight))
+                        
+    except Exception as e:
+        print(f"Error loading ranking TMX: {e}")
+        # Nếu load thất bại thì fill màu trắng
+        ranking_surface.fill((255, 255, 255))
+        
+    return ranking_surface
+
+def load_sidebar():
+    """Tải background sidebar từ file TMX"""
+    # Tạo surface cho sidebar với kích thước 200x725
+    sidebar_surface = pygame.Surface((200, 725))
+    
+    try:
+        # Load map từ file TMX
+        sidebar_map = load_pygame('mapfinal/mapludo.tmx')
+        
+        # Vẽ từng layer của map lên surface
+        for layer in sidebar_map.visible_layers:
+            if hasattr(layer, "tiles"):
+                for x, y, gid in layer:
+                    tile = sidebar_map.get_tile_image_by_gid(gid)
+                    if tile:
+                        sidebar_surface.blit(tile, (x * sidebar_map.tilewidth, 
+                                                  y * sidebar_map.tileheight))
+                        
+    except Exception as e:
+        print(f"Error loading sidebar TMX: {e}")
+        # Nếu load thất bại thì fill màu trắng
+        sidebar_surface.fill((255, 255, 255))
+        
+    return sidebar_surface
+
 #load the board background
 def load_map():
     # Tạo surface mới có kích thước bằng với cửa sổ game
@@ -107,6 +157,8 @@ def load_map():
 
 # Khởi tạo bàn cờ từ Tiled
 bgBoard = load_map()
+bgSidebar = load_sidebar()
+bgRanking = load_ranking()
 
 def draw_dialog(win):
     # Vẽ background mờ
@@ -138,8 +190,7 @@ def draw_dialog(win):
 def draw_sidebar(win, Statekpr):
     global star_effect_message, star_effect_time, dice_animating
     
-    # Vẽ background cho sidebar
-    pygame.draw.rect(win, WHITE, (725, 0, 200, 725))
+    win.blit(bgSidebar, (725, 0))
     
     # Font cho tiếng Việt
     vn_font = pygame.font.SysFont("segoeui", 20)
@@ -207,16 +258,16 @@ def draw_sidebar(win, Statekpr):
 
 def draw_ranking(win):
     """Vẽ bảng xếp hạng"""
-    # Vẽ background mờ
+    # Vẽ background mờ cho toàn màn hình
     s = pygame.Surface((925, 725))
     s.set_alpha(128)
     s.fill((0, 0, 0))
     win.blit(s, (0, 0))
     
-    # Vẽ bảng xếp hạng
+    # Vẽ background bảng xếp hạng từ file TMX
     ranking_rect = pygame.Rect(300, 100, 400, 400)
-    pygame.draw.rect(win, WHITE, ranking_rect)
-    pygame.draw.rect(win, BLACK, ranking_rect, 2)
+    win.blit(bgRanking, (300, 100))
+    pygame.draw.rect(win, BLACK, ranking_rect, 2)  # Vẽ viền đen
     
     # Vẽ tiêu đề
     vn_font = pygame.font.SysFont("segoeui", 36)

@@ -1,12 +1,12 @@
 import pygame
 import sys
+from pytmx.util_pygame import load_pygame  # Thêm import pytmx
 
 class MainBoard:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((900, 600))
+        self.screen = pygame.display.set_mode((800, 800))
         pygame.display.set_caption("Ludo King - Cờ Cá Ngựa")
-        # Sử dụng Tahoma cho tiếng Việt
         self.font = pygame.font.SysFont("tahoma", 74)
         self.small_font = pygame.font.SysFont("tahoma", 36)
         self.buttons = {
@@ -20,7 +20,42 @@ class MainBoard:
         self.show_name_input = False
         self.show_rules = False
         self.active_input = 0
-        
+
+        # Tải bản đồ từ file .tmx
+        self.map_data = load_pygame("assets_ver1/main_menu.tmx")  # Đường dẫn tới file .tmx
+        self.map_layer = pygame.Surface((self.map_data.width * self.map_data.tilewidth,
+                                         self.map_data.height * self.map_data.tileheight))
+
+        # Tải bản đồ cho rules
+        self.rules_map_data = load_pygame("assets_ver1/sp_menu.tmx")
+        self.rules_map_layer = pygame.Surface((self.rules_map_data.width * self.rules_map_data.tilewidth,
+                                            self.rules_map_data.height * self.rules_map_data.tileheight))
+
+        # Tải bản đồ cho start menu
+        self.start_map_data = load_pygame("assets_ver1/start_menu.tmx")
+        self.start_map_layer = pygame.Surface((self.start_map_data.width * self.start_map_data.tilewidth,
+                                        self.start_map_data.height * self.start_map_data.tileheight))
+
+        # Vẽ bản đồ lên một surface
+        for layer in self.map_data.visible_layers:
+            if hasattr(layer, "tiles"):
+                for x, y, image in layer.tiles():
+                    self.map_layer.blit(image, (x * self.map_data.tilewidth, y * self.map_data.tileheight))
+
+        # Vẽ bản đồ rules
+        for layer in self.rules_map_data.visible_layers:
+            if hasattr(layer, "tiles"):
+                for x, y, image in layer.tiles():
+                    self.rules_map_layer.blit(image, (x * self.rules_map_data.tilewidth, 
+                                                    y * self.rules_map_data.tileheight))
+
+        # Vẽ bản đồ start menu
+        for layer in self.start_map_data.visible_layers:
+            if hasattr(layer, "tiles"):
+                for x, y, image in layer.tiles():
+                    self.start_map_layer.blit(image, (x * self.start_map_data.tilewidth, 
+                                                    y * self.start_map_data.tileheight))
+
         # Luật chơi
         rules_text_unicode = [
             u"",
@@ -38,7 +73,9 @@ class MainBoard:
         self.rules_text = rules_text_unicode
 
     def draw_main_menu(self):
-        self.screen.fill((255, 255, 255))
+        # Vẽ background từ bản đồ
+        self.screen.blit(self.map_layer, (0, 0))
+
         title = self.font.render("LUDO", True, (0, 0, 0))
         self.screen.blit(title, (350, 50))
         button_text = {
@@ -69,7 +106,8 @@ class MainBoard:
             y_offset += 45
 
     def draw_name_input(self):
-        self.screen.fill((255, 255, 255))
+        # Vẽ background từ bản đồ start menu
+        self.screen.blit(self.start_map_layer, (0, 0))
         prompt = self.small_font.render("Nhập tên người chơi:", True, (0, 0, 0))
         self.screen.blit(prompt, (50, 50))
         y_offset = 100
@@ -93,7 +131,8 @@ class MainBoard:
         pygame.display.flip()
 
     def draw_rules(self):
-        self.screen.fill((255, 255, 255))
+        # Vẽ background từ bản đồ rules
+        self.screen.blit(self.rules_map_layer, (0, 0))
         y_offset = 50
         
         # Vẽ tiêu đề
