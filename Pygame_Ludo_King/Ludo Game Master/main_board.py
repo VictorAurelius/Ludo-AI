@@ -113,14 +113,26 @@ class MainBoard:
         # Vẽ background từ bản đồ start menu
         self.screen.blit(self.start_map_layer, (0, 0))
         
-        prompt = self.small_font.render("START A NEW GAME", True, (0, 0, 0))
+        # Tạo font chữ cho prompt
+        prompt_font = pygame.font.SysFont("tahoma", 37)  # Kích thước font chữ là 40
+        prompt = prompt_font.render("START A NEW GAME", True, (0, 0, 0))
         self.screen.blit(prompt, (240, 50))
         
-        y_offset = 100
+        title_font = pygame.font.SysFont("tahoma", 28)  # Kích thước font chữ là 40
+        title_player = title_font.render("Player", True, (0, 0, 0))
+        self.screen.blit(title_player, (110, 230))
+        
+        title_name = title_font.render("Name", True, (0, 0, 0))
+        self.screen.blit(title_name, (320, 230))
+        
+        title_bot = title_font.render("Bot", True, (0, 0, 0))
+        self.screen.blit(title_bot, (670, 230))
+        
+        y_offset = 330
         for i in range(4):
-            text = self.small_font.render(f"Player {i+1}: {self.player_names[i]}", True, (0, 0, 0))
-            self.screen.blit(text, (50, y_offset))
-            y_offset += 50
+            text = self.small_font.render(f"{i+1} {self.player_names[i]}", True, (0, 0, 0))
+            self.screen.blit(text, (140, y_offset))
+            y_offset += 100
 
         # Thêm khả năng chỉnh sửa vị trí nút ok
         ok_button_x = 425  # Giá trị mặc định cho vị trí x của nút ok
