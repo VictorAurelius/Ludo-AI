@@ -6,13 +6,13 @@ class MainBoard:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((800, 800))
-        pygame.display.set_caption("Ludo King - Cờ Cá Ngựa")
+        pygame.display.set_caption("Ludo AI")
         self.font = pygame.font.SysFont("tahoma", 74)
         self.small_font = pygame.font.SysFont("tahoma", 36)
         self.buttons = {
-            "play": pygame.Rect(350, 200, 200, 50),
-            "rules": pygame.Rect(350, 300, 200, 50),
-            "quit": pygame.Rect(350, 400, 200, 50),
+            "play": pygame.Rect(330, 280, 200, 50),
+            "rules": pygame.Rect(330, 410, 200, 50),
+            "quit": pygame.Rect(340, 645, 200, 50),
             "ok": pygame.Rect(350, 500, 200, 50),
             "back": pygame.Rect(50, 500, 200, 50)
         }
@@ -59,16 +59,12 @@ class MainBoard:
         # Luật chơi
         rules_text_unicode = [
             u"",
-            u"1. Mỗi người chơi có 4 quân cờ",
-            u"2. Tung 2 con xúc xắc để di chuyển quân",
-            u"3. Cần tung được tổng 2 con xúc xắc >= 10 để đưa",
-            u"    quân vào bàn cờ",
-            u"4. Quân có thể đá quân địch về chuồng nếu đứng cùng",
-            u"    ô với quân địch",
-            u"5. Người chơi phải đưa tất cả quân về đích để thắng",
-            u"6. Quân di chuyển số ô bằng tổng 2 con xúc xắc",
-            u"(Nếu khoảng cách từ quân đến đích nhỏ hơn 1 so với",
-            u"  tổng số xúc xắc thì quân đó vẫn có thể về đích)"
+            u"1. Each player has 4 pieces",
+            u"2. Roll a 6 to move a piece out",
+            u"3. Move pieces based on dice roll",
+            u"4. Capture opponent's piece on the same spot",
+            u"5. Special effects on star tiles",
+            u"6. Bring all 4 pieces home to win"
         ]
         self.rules_text = rules_text_unicode
 
@@ -77,17 +73,17 @@ class MainBoard:
         self.screen.blit(self.map_layer, (0, 0))
 
         title = self.font.render("LUDO", True, (0, 0, 0))
-        self.screen.blit(title, (350, 50))
+        self.screen.blit(title, (330, 100))
         button_text = {
-            "play": "Chơi",
-            "rules": "Luật chơi",
-            "quit": "Thoát",
-            "ok": "Đồng ý",
-            "back": "Quay lại"
+            "play": "Play",
+            "rules": "Rules",
+            "quit": "Quit",
+            "ok": "Start",
+            "back": "Back"
         }
         for btn_text, btn_rect in self.buttons.items():
             if btn_text not in ["ok", "back"]:
-                pygame.draw.rect(self.screen, (0, 0, 0), btn_rect, 2)
+                
                 text = self.small_font.render(button_text[btn_text], True, (0, 0, 0))
                 # Tính toán vị trí để căn giữa text
                 text_width = text.get_width()
@@ -108,23 +104,23 @@ class MainBoard:
     def draw_name_input(self):
         # Vẽ background từ bản đồ start menu
         self.screen.blit(self.start_map_layer, (0, 0))
-        prompt = self.small_font.render("Nhập tên người chơi:", True, (0, 0, 0))
+        prompt = self.small_font.render("START A NEW GAME", True, (0, 0, 0))
         self.screen.blit(prompt, (50, 50))
         y_offset = 100
         for i in range(4):
-            text = self.small_font.render(f"Người chơi {i+1}: {self.player_names[i]}", True, (0, 0, 0))
+            text = self.small_font.render(f"Player {i+1}: {self.player_names[i]}", True, (0, 0, 0))
             self.screen.blit(text, (50, y_offset))
             y_offset += 50
         # Vẽ nút Đồng ý
         pygame.draw.rect(self.screen, (0, 0, 0), self.buttons["ok"], 2)
-        ok_text = self.small_font.render("Bắt đầu", True, (0, 0, 0))
+        ok_text = self.small_font.render("START", True, (0, 0, 0))
         text_x = self.buttons["ok"].centerx - ok_text.get_width() // 2
         text_y = self.buttons["ok"].centery - ok_text.get_height() // 2
         self.screen.blit(ok_text, (text_x, text_y))
         
         # Vẽ nút Quay lại
         pygame.draw.rect(self.screen, (0, 0, 0), self.buttons["back"], 2)
-        back_text = self.small_font.render("Quay lại", True, (0, 0, 0))
+        back_text = self.small_font.render("BACK", True, (0, 0, 0))
         text_x = self.buttons["back"].centerx - back_text.get_width() // 2
         text_y = self.buttons["back"].centery - back_text.get_height() // 2
         self.screen.blit(back_text, (text_x, text_y))
@@ -136,7 +132,7 @@ class MainBoard:
         y_offset = 50
         
         # Vẽ tiêu đề
-        title = self.font.render("Luật chơi", True, (0, 0, 0))
+        title = self.font.render("Rules", True, (0, 0, 0))
         self.screen.blit(title, (250, 20))
         
         # Vẽ từng dòng luật
@@ -147,7 +143,7 @@ class MainBoard:
             
         # Vẽ nút Quay lại
         pygame.draw.rect(self.screen, (0, 0, 0), self.buttons["back"], 2)
-        back_text = self.small_font.render("Quay lại", True, (0, 0, 0))
+        back_text = self.small_font.render("BACK", True, (0, 0, 0))
         text_x = self.buttons["back"].centerx - back_text.get_width() // 2
         text_y = self.buttons["back"].centery - back_text.get_height() // 2
         self.screen.blit(back_text, (text_x, text_y))
