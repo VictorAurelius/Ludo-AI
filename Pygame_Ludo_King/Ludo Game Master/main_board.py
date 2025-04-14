@@ -22,6 +22,10 @@ class MainBoard:
         self.show_rules = False
         self.show_developers = False  # Add a flag for the Developers section
         self.active_input = 0
+        
+        # Biến tùy chỉnh khoảng cách giữa số thứ tự player và khung nhập
+        self.player_number_spacing = 170  # Khoảng cách từ số thứ tự đến khung nhập
+        self.input_boxes = []  # Danh sách các hộp nhập liệu
 
         # Tải bản đồ từ file .tmx
         self.map_data = load_pygame("assets_ver1/main_menu.tmx")  # Đường dẫn tới file .tmx
@@ -114,13 +118,14 @@ class MainBoard:
         self.screen.blit(self.start_map_layer, (0, 0))
         
         # Tạo font chữ cho prompt
-        prompt_font = pygame.font.SysFont("tahoma", 37)  # Kích thước font chữ là 40
+        prompt_font = pygame.font.SysFont("tahoma", 37)
         prompt = prompt_font.render("START A NEW GAME", True, (0, 0, 0))
         self.screen.blit(prompt, (240, 50))
         
-        title_font = pygame.font.SysFont("tahoma", 28)  # Kích thước font chữ là 40
+        title_font = pygame.font.SysFont("tahoma", 28)
+        # Điều chỉnh vị trí của tiêu đề
         title_player = title_font.render("Player", True, (0, 0, 0))
-        self.screen.blit(title_player, (110, 230))
+        self.screen.blit(title_player, (115, 230))
         
         title_name = title_font.render("Name", True, (0, 0, 0))
         self.screen.blit(title_name, (320, 230))
@@ -128,10 +133,34 @@ class MainBoard:
         title_bot = title_font.render("Bot", True, (0, 0, 0))
         self.screen.blit(title_bot, (670, 230))
         
-        y_offset = 330
+        # Tạo khung nhập và hiển thị tên người chơi
+        input_font = pygame.font.SysFont("tahoma", 26)
+        y_offset = 325
+        self.input_boxes = []  # Reset input boxes
+        
         for i in range(4):
-            text = self.small_font.render(f"{i+1} {self.player_names[i]}", True, (0, 0, 0))
-            self.screen.blit(text, (140, y_offset))
+            # Hiển thị số thứ tự người chơi
+            player_number = self.small_font.render(f"{i+1}", True, (0, 0, 0))
+            self.screen.blit(player_number, (140, y_offset))
+            
+            # Tạo hộp nhập văn bản với vị trí tùy chỉnh dựa trên khoảng cách
+            input_rect = pygame.Rect(90 + self.player_number_spacing, y_offset, 200, 40)
+            self.input_boxes.append(input_rect)
+            
+            # Chỉ hiển thị khung khi đang active
+            if i == self.active_input:
+                pygame.draw.rect(self.screen, (240, 240, 240), input_rect)
+                pygame.draw.rect(self.screen, (0, 0, 0), input_rect, 2)
+            
+            # Luôn hiển thị text đã nhập
+            name_text = input_font.render(self.player_names[i], True, (0, 0, 0))
+            self.screen.blit(name_text, (100 + self.player_number_spacing, y_offset))
+            
+            # Hiển thị dấu nháy nếu đây là ô đang được chọn
+            if i == self.active_input and pygame.time.get_ticks() % 1000 < 500:
+                cursor_pos = 100 + self.player_number_spacing + name_text.get_width()
+                pygame.draw.line(self.screen, (0, 0, 0), (cursor_pos, y_offset), (cursor_pos, y_offset + 30), 2)
+            
             y_offset += 100
 
         # Thêm khả năng chỉnh sửa vị trí nút ok
@@ -294,7 +323,7 @@ class MainBoard:
                             return self.player_names  # Trả về tên người chơi
                     else:
                         for i in range(4):
-                            if pygame.Rect(50, 100 + i * 50, 300, 50).collidepoint(event.pos):
+                            if self.input_boxes[i].collidepoint(event.pos):
                                 self.active_input = i
                 else:
                     if self.buttons["developer"].collidepoint(event.pos):
