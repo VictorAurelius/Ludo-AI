@@ -120,7 +120,7 @@ def load_sidebar():
     
     try:
         # Load map từ file TMX
-        sidebar_map = load_pygame('mapfinal/mapludo.tmx')
+        sidebar_map = load_pygame('mapfinal/slide_bar.tmx')
         
         # Vẽ từng layer của map lên surface
         for layer in sidebar_map.visible_layers:
