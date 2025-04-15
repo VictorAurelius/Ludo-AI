@@ -195,60 +195,91 @@ def draw_sidebar(win, Statekpr):
     # Font cho tiếng Việt
     vn_font = pygame.font.SysFont("segoeui", 20)
     
-    # Vẽ nút Tiêu đề
-    pygame.draw.rect(win, BLACK, title_button, 2)
-    title_text = vn_font.render(u"Tiêu đề", True, BLACK)
-    win.blit(title_text, (790, 15))
+    # Thay thế đoạn code vẽ nút tiêu đề bằng:
+    # Vẽ nút Tiêu đề với kích thước dựa trên text
+    bold_font = pygame.font.SysFont("segoeui", 20, bold=True)  # Tạo font chữ đậm
+    title_text = bold_font.render(u"Back", True, BLACK)
+    text_rect = title_text.get_rect()
+    # Thêm padding 20px cho chiều rộng và 10px cho chiều cao
+    title_button = pygame.Rect(795, 625, text_rect.width + 20, text_rect.height + 10)
+    # Cập nhật biến title_button toàn cục để sự kiện click hoạt động đúng
+    globals()['title_button'] = title_button
+
+    # Căn giữa text trong button
+    text_x = title_button.centerx - text_rect.width // 2
+    text_y = title_button.centery - text_rect.height // 2
+    win.blit(title_text, (text_x, text_y))
     
-    # Hiển thị người chơi đang đến lượt
-    text = vn_font.render(u"Lượt của:", True, BLACK)
-    win.blit(text, (735, 60))
+    # # Hiển thị người chơi đang đến lượt
+    # text = vn_font.render(u"Lượt của:", True, BLACK)
+    # win.blit(text, (735, 60))
     
-    # Nếu display_player chưa được khởi tạo, khởi tạo ban đầu dựa trên lượt
-    if Statekpr.display_player is None:
-        Statekpr.update_display_player()
+    # # Nếu display_player chưa được khởi tạo, khởi tạo ban đầu dựa trên lượt
+    # if Statekpr.display_player is None:
+    #     Statekpr.update_display_player()
             
-    # Hiển thị tên người chơi hiện tại
-    color = COLORS[Statekpr.display_player.color]
-    text = vn_font.render(Statekpr.display_player.name, True, color)
-    win.blit(text, (735, 90))
+    # # Hiển thị tên người chơi hiện tại
+    # color = COLORS[Statekpr.display_player.color]
+    # text = vn_font.render(Statekpr.display_player.name, True, color)
+    # win.blit(text, (735, 90))
     
-    # Vẽ nút tung xúc xắc
-    button_color = GRAY
-    if not roll_button_enabled or dice_animating:  # Thêm điều kiện dice_animating
-        button_color = (100, 100, 100)  # Tối màu khi disable hoặc đang animation
-    pygame.draw.rect(win, button_color, roll_button)
-    text = vn_font.render(u"Tung xúc xắc", True, WHITE)
-    win.blit(text, (770, 298))
+    
+    # Tạo font chữ đậm với font segoe ui và cỡ chữ 24
+    bold_font = pygame.font.SysFont("segoeui", 20, bold=True)
+    roll_text = bold_font.render("ROLL", True, BLACK)
+    
+    # Tính toán kích thước và vị trí cho button dựa trên text
+    text_rect = roll_text.get_rect()
+    padding_x = 40  # Padding ngang
+    padding_y = 20  # Padding dọc
+    button_width = text_rect.width + padding_x
+    button_height = text_rect.height + padding_y
+    
+    # Cập nhật vị trí button để căn giữa trong sidebar
+    button_x = 730 + ((200 - button_width) // 2)  # Căn giữa trong sidebar
+    button_y = 220  # Giữ nguyên vị trí y
+    
+    # Cập nhật Rect của roll_button
+    roll_button = pygame.Rect(button_x, button_y, button_width, button_height)
+    globals()['roll_button'] = roll_button  # Cập nhật biến toàn cục
+    
+    # Tính toán vị trí để căn giữa text trong button mới
+    text_x = roll_button.centerx - text_rect.width // 2
+    text_y = roll_button.centery - text_rect.height // 2
+    
+    # Vẽ text đã được căn giữa
+    win.blit(roll_text, (text_x, text_y))
+
     
     # Hiển thị 2 hình xúc xắc
-    scaled_dice1 = pygame.transform.scale(current_dice1, (80, 80))
-    scaled_dice2 = pygame.transform.scale(current_dice2, (80, 80))
-    win.blit(scaled_dice1, (745, 140))
-    win.blit(scaled_dice2, (835, 140))
+    scaled_dice1 = pygame.transform.scale(current_dice1, (60, 60))
+    scaled_dice2 = pygame.transform.scale(current_dice2, (60, 60))
+    win.blit(scaled_dice1, (765, 80))
+    win.blit(scaled_dice2, (830, 80))
     
     # Hiển thị tổng hai xúc xắc CHỈ KHI ANIMATION KẾT THÚC
     if not dice_animating:  # Chỉ hiển thị khi animation kết thúc
         total = dice_num1 + dice_num2
-        total_text = vn_font.render(f"Tổng: {total}", True, BLACK)
-        win.blit(total_text, (790, 233))
+        # Tạo font chữ đậm với font segoe ui và cỡ chữ 24
+        bold_font = pygame.font.SysFont("segoeui", 16, bold=True)
+        total_text = bold_font.render(f"SUM POINT: {total}", True, (0, 0, 139))  # Màu xanh navy
+        # Tính toán vị trí để căn giữa text
+        text_rect = total_text.get_rect()
+        text_x = 825 - text_rect.width // 2
+        text_y = 185
+        win.blit(total_text, (text_x, text_y))
     
     # Hiển thị thông tin quân cờ của từng người chơi
-    y_pos = 360
+    y_pos = 310
     for player in Statekpr.players:
-        color = COLORS[player.color]
-        text = vn_font.render(f"{player.name}:", True, color)
-        win.blit(text, (735, y_pos))
-        
-        # Đếm số quân về đích (counter = 52)
-        text = vn_font.render(f"Về đích: {player.pawns_home}", True, BLACK)
-        win.blit(text, (745, y_pos + 30))
         
         # Hiển thị số lần bị đá
-        text = vn_font.render(f"Bị đá: {player.times_kicked}", True, BLACK)
-        win.blit(text, (745, y_pos + 55))
+        # Tạo font chữ đậm với màu đỏ
+        bold_font = pygame.font.SysFont("segoeui", 20, bold=True)
+        text = bold_font.render(f"DIE: {player.times_kicked}", True, (255, 0, 0))  # RGB cho màu đỏ
+        win.blit(text, (810, y_pos + 25))
         
-        y_pos += 90
+        y_pos += 75
     
     # Hiển thị thông báo hiệu ứng sao
     if star_effect_message and pygame.time.get_ticks() - star_effect_time < 2000:
