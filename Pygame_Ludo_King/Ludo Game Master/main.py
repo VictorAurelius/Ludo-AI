@@ -88,6 +88,30 @@ def draw_alert(win, text):
     text_rect = text_surface.get_rect(center=(winX // 2, y + 25))
     win.blit(text_surface, text_rect)
 
+def load_dialog():
+    """Tải background cho dialog từ file TMX"""
+    # Tạo surface cho dialog với kích thước 230x100
+    dialog_surface = pygame.Surface((230, 100))
+    
+    try:
+        # Load map từ file TMX
+        dialog_map = load_pygame('mapfinal/slide_bar.tmx')
+        
+        # Vẽ từng layer của map lên surface
+        for layer in dialog_map.visible_layers:
+            if hasattr(layer, "tiles"):
+                for x, y, gid in layer:
+                    tile = dialog_map.get_tile_image_by_gid(gid)
+                    if tile:
+                        dialog_surface.blit(tile, (x * dialog_map.tilewidth, 
+                                                 y * dialog_map.tileheight))
+    except Exception as e:
+        print(f"Error loading dialog TMX: {e}")
+        # Nếu load thất bại thì fill màu trắng
+        dialog_surface.fill((255, 255, 255))
+        
+    return dialog_surface
+
 def load_ranking():
     """Tải background cho bảng xếp hạng từ file TMX"""
     # Tạo surface cho bảng xếp hạng với kích thước 400x400
@@ -159,9 +183,10 @@ def load_map():
 bgBoard = load_map()
 bgSidebar = load_sidebar()
 bgRanking = load_ranking()
+bgDialog = load_dialog()
 
 def draw_dialog(win):
-    # Vẽ background mờ
+    # Vẽ background mờ cho toàn màn hình
     s = pygame.Surface((925, 725))
     s.set_alpha(128)
     s.fill((0, 0, 0))
@@ -169,7 +194,7 @@ def draw_dialog(win):
     
     # Vẽ dialog box
     dialog_rect = pygame.Rect(400, 200, 230, 100)
-    pygame.draw.rect(win, WHITE, dialog_rect)
+    win.blit(bgDialog, (400, 200))
     pygame.draw.rect(win, BLACK, dialog_rect, 2)
     
     # Vẽ text
@@ -273,12 +298,27 @@ def draw_sidebar(win, Statekpr):
     y_pos = 310
     for player in Statekpr.players:
         
+        # Xác định màu khung
+        frame_color = COLORS[player.color]
+        
+        is_current_player = (Statekpr.display_player == player)
+        
+        # Tạo hình chữ nhật cho khung
+        player_frame = pygame.Rect(755, y_pos + 20, 140, 45)
+        
+        # Vẽ khung nền
+        if is_current_player and not dice_animating:
+            # Vẽ viền đậm hơn cho người chơi hiện tại
+            pygame.draw.rect(win, frame_color, player_frame, 6)  # Viền dày 3px
+        else:
+            pygame.draw.rect(win, frame_color, player_frame, 1)  # Viền mỏng 1px
+        
         # Hiển thị số lần bị đá
-        # Tạo font chữ đậm với màu đỏ
         bold_font = pygame.font.SysFont("segoeui", 20, bold=True)
-        text = bold_font.render(f"DIE: {player.times_kicked}", True, (255, 0, 0))  # RGB cho màu đỏ
+        text = bold_font.render(f"DIE: {player.times_kicked}", True, (255, 0, 0))
         win.blit(text, (810, y_pos + 25))
         
+        # Thêm khoảng cách giữa các khung
         y_pos += 75
     
     # Hiển thị thông báo hiệu ứng sao
@@ -356,6 +396,8 @@ def main(player_names=None):
     Statekpr = Statekeep()
     #Initialize clock
     clock = pygame.time.Clock()
+    
+    Statekpr.update_display_player()
     
     # Khởi tạo các biến xúc xắc
     current_dice1 = dice_images[0]  # Mặt xúc xắc 1
@@ -453,7 +495,7 @@ def main(player_names=None):
                 if pawn.is_move:
                     pawn.update_animation()  # Cập nhật vị trí của quân trong animation
                     any_pawn_animating = True
-                elif hasattr(pawn, 'just_finished_animation') and pawn.just_finished_animation:
+                if hasattr(pawn, 'just_finished_animation') and pawn.just_finished_animation:
                     # Quân vừa hoàn thành animation, xử lý các hiệu ứng sau di chuyển
                     pawn.just_finished_animation = False
                     
@@ -524,7 +566,7 @@ def main(player_names=None):
                             Statekpr.find_next_valid_player()
                             
                             # Cập nhật người chơi hiển thị sau khi chuyển lượt
-                            Statekpr.update_display_player()        
+                            Statekpr.update_display_player()   
                     
                     # Kiểm tra nếu quân đã về đích (counter = 52 hoặc 53) để tăng số quân về đích
                     if pawn.counter == 96 or pawn.counter == 97:
@@ -685,6 +727,7 @@ def main(player_names=None):
                         # Không có nước đi hợp lệ, chuyển lượt và giữ nút enable
                         roll_button_enabled = True
                         Statekpr.find_next_valid_player()
+                        Statekpr.update_display_player()
                 
                 # Kiểm tra click vào quân cờ khi nút tung xúc xắc đang disable
                 if not roll_button_enabled:
@@ -796,9 +839,6 @@ def main(player_names=None):
         
         # Vẽ các thông báo - đặt ở cuối để hiển thị trên cùng
         alert_manager.draw(win)
-        
-        # Cập nhật màn hình
-        pygame.display.update()
             
         # Vẽ dialog nếu đang hiển thị
         if showing_dialog:
