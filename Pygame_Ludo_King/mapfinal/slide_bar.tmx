@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="8" height="29" tilewidth="25" tileheight="25" infinite="0" nextlayerid="6" nextobjectid="1">
-  <tileset firstgid="1" source="Tilemap_Flat.tsx"/>
-  <tileset firstgid="41" source="Tilemap_Elevation.tsx"/>
-  <tileset firstgid="73" source="Ribbon_Red_3Slides.tsx"/>
-  <tileset firstgid="85" source="Ribbon_Yellow_3Slides.tsx"/>
-  <tileset firstgid="142" source="Ribbon_Yellow_Connection_Left.tsx"/>
-  <tileset firstgid="146" source="Ribbon_Yellow_Connection_Right.tsx"/>
-  <layer id="1" name="ground" width="8" height="29">
-    <data encoding="csv">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="8" height="29" tilewidth="25" tileheight="25" infinite="0" nextlayerid="7" nextobjectid="1">
+ <tileset firstgid="1" source="Tilemap_Flat.tsx"/>
+ <tileset firstgid="41" source="Tilemap_Elevation.tsx"/>
+ <tileset firstgid="73" source="Ribbon_Red_3Slides.tsx"/>
+ <tileset firstgid="85" source="Ribbon_Yellow_3Slides.tsx"/>
+ <tileset firstgid="97" source="Ribbon_Yellow_Connection_Left.tsx"/>
+ <tileset firstgid="101" source="Ribbon_Yellow_Connection_Right.tsx"/>
+ <tileset firstgid="105" source="Warrior_Red1.tsx"/>
+ <tileset firstgid="114" source="Warrior_Blue1.tsx"/>
+ <tileset firstgid="123" source="Warrior_Yellow1.tsx"/>
+ <tileset firstgid="132" source="Warrior_Purple1.tsx"/>
+ <tileset firstgid="141" source="16.tsx"/>
+ <layer id="1" name="ground" width="8" height="29">
+  <data encoding="csv">
 17,17,17,17,17,17,17,17,
 17,17,17,17,17,17,17,17,
 17,17,17,17,17,17,17,17,
@@ -37,10 +42,10 @@
 17,17,17,17,17,17,17,17,
 17,17,17,17,17,17,17,17,
 17,17,17,17,17,17,17,17
-    </data>
-  </layer>
-  <layer id="5" name="grass" width="8" height="29">
-    <data encoding="csv">
+</data>
+ </layer>
+ <layer id="5" name="grass" width="8" height="29">
+  <data encoding="csv">
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
@@ -48,8 +53,8 @@
 0,11,12,12,12,12,13,0,
 0,21,22,22,22,22,23,0,
 0,0,0,0,0,0,0,0,
-0,146,87,88,87,88,143,0,
-0,148,93,94,93,94,145,0,
+0,101,87,88,87,88,98,0,
+0,103,93,94,93,94,100,0,
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
@@ -70,10 +75,10 @@
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0
-    </data>
-  </layer>
-  <layer id="2" name="rock" width="8" height="29">
-    <data encoding="csv">
+</data>
+ </layer>
+ <layer id="2" name="rock" width="8" height="29">
+  <data encoding="csv">
 41,42,42,42,42,42,42,43,
 48,56,56,56,56,56,56,48,
 48,0,0,0,0,0,0,48,
@@ -103,10 +108,10 @@
 48,0,0,0,0,0,0,48,
 48,58,58,58,58,58,58,47,
 56,56,56,56,56,56,56,56
-    </data>
-  </layer>
-  <layer id="3" name="button" width="8" height="29">
-    <data encoding="csv">
+</data>
+ </layer>
+ <layer id="3" name="button" width="8" height="29">
+  <data encoding="csv">
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
@@ -136,6 +141,39 @@
 0,79,80,81,82,83,84,0,
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0
-    </data>
-  </layer>
+</data>
+ </layer>
+ <layer id="6" name="warrior" width="8" height="29">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,141,0,0,0,0,0,0,
+0,142,106,107,0,0,0,0,
+0,108,109,110,0,0,0,0,
+0,141,0,0,0,0,0,0,
+0,142,115,116,0,0,0,0,
+0,117,118,119,0,0,0,0,
+0,141,0,0,0,0,0,0,
+0,142,124,125,0,0,0,0,
+0,126,127,128,0,0,0,0,
+0,141,0,0,0,0,0,0,
+0,142,133,134,0,0,0,0,
+0,135,136,137,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0
+</data>
+ </layer>
 </map>
