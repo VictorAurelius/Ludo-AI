@@ -386,6 +386,143 @@ def draw_sidebar(win, Statekpr):
         # Đặt thông báo ở dưới thông tin người chơi
         win.blit(text, (735, y_pos + 20))
 
+def draw_sidebar_with_scroll(win, Statekpr):
+    """Vẽ sidebar với vị trí đã được điều chỉnh theo cuộn"""
+    global star_effect_message, star_effect_time, dice_animating
+    
+    # Vẽ background sidebar
+    blit_with_scroll(win, bgSidebar, (725, 0))
+    
+    # Font cho tiếng Việt
+    vn_font = pygame.font.SysFont("segoeui", 20)
+    
+    # Vẽ nút Tiêu đề với kích thước dựa trên text
+    bold_font = pygame.font.SysFont("segoeui", 20, bold=True)
+    title_text = bold_font.render(u"Back", True, BLACK)
+    text_rect = title_text.get_rect()
+    
+    # Thêm padding và tính toán vị trí có tính đến cuộn
+    title_button_adjusted = pygame.Rect(
+        795 - scroll_x, 625 - scroll_y, 
+        text_rect.width + 20, text_rect.height + 10
+    )
+    
+    # Cập nhật biến title_button toàn cục (không áp dụng cuộn)
+    globals()['title_button'] = pygame.Rect(
+        795, 625, 
+        text_rect.width + 20, text_rect.height + 10
+    )
+
+    # Căn giữa text trong button
+    text_x = title_button_adjusted.centerx - text_rect.width // 2
+    text_y = title_button_adjusted.centery - text_rect.height // 2
+    win.blit(title_text, (text_x, text_y))
+    
+    
+    # Tính toán vị trí roll_button có tính đến cuộn
+    bold_font = pygame.font.SysFont("segoeui", 20, bold=True)
+    if not roll_button_enabled or dice_animating:
+        text_color = GRAY
+    else:
+        text_color = BLACK
+
+    roll_text = bold_font.render("ROLL", True, text_color)
+    
+    text_rect = roll_text.get_rect()
+    padding_x = 40
+    padding_y = 20
+    button_width = text_rect.width + padding_x
+    button_height = text_rect.height + padding_y
+    
+    button_x = 730 + ((200 - button_width) // 2)
+    button_y = 220
+    
+    # Cập nhật roll_button không có cuộn (cho sự kiện click)
+    roll_button = pygame.Rect(button_x, button_y, button_width, button_height)
+    globals()['roll_button'] = roll_button
+    
+    # Tính toán vị trí đã cuộn cho việc hiển thị
+    button_x_adjusted = button_x - scroll_x
+    button_y_adjusted = button_y - scroll_y
+    
+    # Vẽ nút với vị trí đã cuộn
+    try:
+        scaled_bg = pygame.transform.scale(roll_button_bg, (button_width, button_height))
+        if not roll_button_enabled or dice_animating:
+            darkened_bg = scaled_bg.copy()
+            for x in range(button_width):
+                for y in range(button_height):
+                    color = darkened_bg.get_at((x, y))
+                    if color[3] > 0:
+                        r, g, b, a = color
+                        darkened_color = (int(r * 0.7), int(g * 0.7), int(b * 0.7), a)
+                        darkened_bg.set_at((x, y), darkened_color)
+            win.blit(darkened_bg, (button_x_adjusted, button_y_adjusted))
+        else:
+            win.blit(scaled_bg, (button_x_adjusted, button_y_adjusted))
+    except (TypeError, AttributeError):
+        if not roll_button_enabled or dice_animating:
+            pygame.draw.rect(win, (160, 160, 140), pygame.Rect(button_x_adjusted, button_y_adjusted, button_width, button_height))
+        else:
+            pygame.draw.rect(win, (255, 255, 204), pygame.Rect(button_x_adjusted, button_y_adjusted, button_width, button_height))
+        pygame.draw.rect(win, BLACK, pygame.Rect(button_x_adjusted, button_y_adjusted, button_width, button_height), 2)
+    
+    # Tính toán vị trí text với cuộn
+    text_x = button_x_adjusted + (button_width - text_rect.width) // 2
+    text_y = button_y_adjusted + (button_height - text_rect.height) // 2
+    win.blit(roll_text, (text_x, text_y))
+
+    # Hiển thị xúc xắc với vị trí cuộn
+    scaled_dice1 = pygame.transform.scale(current_dice1, (60, 60))
+    scaled_dice2 = pygame.transform.scale(current_dice2, (60, 60))
+    win.blit(scaled_dice1, (765 - scroll_x, 80 - scroll_y))
+    win.blit(scaled_dice2, (830 - scroll_x, 80 - scroll_y))
+    
+    # Hiển thị tổng hai xúc xắc CHỈ KHI ANIMATION KẾT THÚC
+    if not dice_animating:  # Chỉ hiển thị khi animation kết thúc
+        total = dice_num1 + dice_num2
+        # Tạo font chữ đậm với font segoe ui và cỡ chữ 24
+        bold_font = pygame.font.SysFont("segoeui", 16, bold=True)
+        total_text = bold_font.render(f"SUM POINT: {total}", True, (0, 0, 139))  # Màu xanh navy
+        # Tính toán vị trí để căn giữa text
+        text_rect = total_text.get_rect()
+        text_x = 825 - text_rect.width // 2
+        text_y = 185
+        win.blit(total_text, (text_x - scroll_x, text_y - scroll_y))
+    
+    # Hiển thị thông tin quân cờ của từng người chơi
+    y_pos = 310
+    for player in Statekpr.players:
+        
+        # Xác định màu khung
+        frame_color = COLORS[player.color]
+        
+        is_current_player = (Statekpr.display_player == player)
+        
+        # Tạo hình chữ nhật cho khung
+        player_frame = pygame.Rect(755 - scroll_x, y_pos - scroll_y + 20, 140, 45)
+        
+        # Vẽ khung nền
+        if is_current_player and not dice_animating:
+            # Vẽ viền đậm hơn cho người chơi hiện tại
+            pygame.draw.rect(win, frame_color, player_frame, 6)  # Viền dày 3px
+        else:
+            pygame.draw.rect(win, frame_color, player_frame, 1)  # Viền mỏng 1px
+        
+        # Hiển thị số lần bị đá
+        bold_font = pygame.font.SysFont("segoeui", 20, bold=True)
+        text = bold_font.render(f"DIE: {player.times_kicked}", True, (255, 0, 0))
+        win.blit(text, (810 - scroll_x, y_pos + 25 - scroll_y))
+        
+        # Thêm khoảng cách giữa các khung
+        y_pos += 75
+    
+    # Hiển thị thông báo hiệu ứng sao
+    if star_effect_message and pygame.time.get_ticks() - star_effect_time < 2000:
+        text = vn_font.render(star_effect_message, True, (255, 215, 0))  # Màu vàng
+        # Đặt thông báo ở dưới thông tin người chơi
+        win.blit(text, (735 - scroll_x, y_pos + 20 - scroll_y))
+
 def draw_ranking(win):
     """Vẽ bảng xếp hạng"""
     # Vẽ background mờ cho toàn màn hình
@@ -422,8 +559,45 @@ def draw_ranking(win):
 DICE_ANIMATION_FRAMES = 15  # Number of frames for animation
 DICE_ANIMATION_SPEED = 50   # Milliseconds between frames
 
+# Biến toàn cục cho việc cuộn màn hình
+scroll_x = 0  # Vị trí cuộn theo chiều ngang
+scroll_y = 0  # Vị trí cuộn theo chiều dọc
+SCROLL_SPEED = 15  # Tốc độ cuộn mỗi lần
+is_scrolling = False  # Đang kéo thả để cuộn hay không
+scroll_start_pos = (0, 0)  # Vị trí bắt đầu kéo
+
+def update_scroll_limits():
+    """Cập nhật giới hạn cuộn dựa trên kích thước cửa sổ và màn hình"""
+    global scroll_x, scroll_y
+    
+    # Lấy thông tin kích thước màn hình
+    info = pygame.display.Info()
+    screen_width = info.current_w
+    screen_height = info.current_h
+    
+    # Tính toán giới hạn cuộn
+    max_scroll_x = max(0, winX - screen_width + 200)  # +50 là đệm
+    max_scroll_y = max(0, winY - screen_height + 200)  # +50 là đệm
+    
+    # Giới hạn vị trí cuộn trong phạm vi cho phép
+    scroll_x = max(0, min(scroll_x, max_scroll_x))
+    scroll_y = max(0, min(scroll_y, max_scroll_y))
+    
+    return max_scroll_x > 0 or max_scroll_y > 0  # Trả về True nếu cần cuộn
+
+def blit_with_scroll(surface, image, position):
+    """Vẽ hình ảnh với vị trí đã được điều chỉnh theo cuộn"""
+    x, y = position
+    surface.blit(image, (x - scroll_x, y - scroll_y))
+
 def main(player_names=None):
-    global alert_manager, roll_button_bg
+    global alert_manager, roll_button_bg, scroll_x, scroll_y, is_scrolling, scroll_start_pos
+    
+    # Reset các biến cuộn
+    scroll_x = 0
+    scroll_y = 0
+    is_scrolling = False
+    scroll_start_pos = (0, 0)
     
     # Tải background cho nút roll
     roll_button_bg = load_roll_button()
@@ -697,9 +871,52 @@ def main(player_names=None):
                     mainLoop = False
                     return False
                 
+            # Xử lý sự kiện cuộn chuột
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                # Xử lý sự kiện click hiện có...
+                
+                # Thêm xử lý cuộn bằng bánh xe chuột (scrollwheel)
+                if event.button == 4:  # Cuộn lên
+                    scroll_y = max(0, scroll_y - SCROLL_SPEED)
+                    update_scroll_limits()
+                elif event.button == 5:  # Cuộn xuống
+                    scroll_y += SCROLL_SPEED
+                    update_scroll_limits()
+                    
+                # Bắt đầu kéo thả để cuộn
+                elif event.button == 3:  # Chuột phải
+                    is_scrolling = True
+                    scroll_start_pos = event.pos
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_SIZEALL)
+            
+            # Xử lý kéo thả để cuộn
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 3:  # Chuột phải
+                    is_scrolling = False
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+            
+            # Cuộn theo chuột khi kéo thả
+            elif event.type == pygame.MOUSEMOTION:
+                if is_scrolling:
+                    # Tính toán khoảng cách di chuyển
+                    dx = scroll_start_pos[0] - event.pos[0]
+                    dy = scroll_start_pos[1] - event.pos[1]
+                    
+                    # Cập nhật vị trí cuộn
+                    scroll_x += dx
+                    scroll_y += dy
+                    
+                    # Cập nhật giới hạn cuộn
+                    update_scroll_limits()
+                    
+                    # Cập nhật vị trí bắt đầu cho lần di chuyển tiếp theo
+                    scroll_start_pos = event.pos
+                
             # Xử lý sự kiện click chuột
             if event.type == MOUSEBUTTONDOWN and not any_pawn_animating:  # Chỉ cho phép click khi không có animation
                 mouse_pos = event.pos
+                # Điều chỉnh vị trí chuột theo vị trí cuộn
+                adjusted_mouse_pos = (mouse_pos[0] + scroll_x, mouse_pos[1] + scroll_y)
                 
                 if showing_ranking:
                     #Kiểm tra click vào nút Tiêu đề trong bảng xếp hạng
@@ -718,12 +935,12 @@ def main(player_names=None):
                     continue
                 
                 # Kiểm tra click vào nút tiêu đề khi không hiện dialog
-                if title_button.collidepoint(mouse_pos):
+                if title_button.collidepoint(adjusted_mouse_pos):
                     showing_dialog = True
                     continue
                 
                 # Kiểm tra nếu click vào nút tung xúc xắc
-                if roll_button.collidepoint(mouse_pos) and roll_button_enabled and not dice_animating:
+                if roll_button.collidepoint(adjusted_mouse_pos) and roll_button_enabled and not dice_animating:
                     if not Statekpr.gamestart:
                         Statekpr.start_game()
                     # Start dice animation
@@ -809,7 +1026,9 @@ def main(player_names=None):
                         # Kiểm tra va chạm chính xác hơn với quân cờ
                         distance_threshold = 15  # Giá trị ngưỡng khoảng cách, có thể điều chỉnh
                         pawn_center = pawn.rect.center
-                        mouse_distance = ((mouse_pos[0] - pawn_center[0])**2 + (mouse_pos[1] - pawn_center[1])**2)**0.5
+                        # Điều chỉnh vị trí chuột theo vị trí cuộn
+                        adjusted_mouse_pos = (mouse_pos[0] + scroll_x, mouse_pos[1] + scroll_y)
+                        mouse_distance = ((adjusted_mouse_pos[0] - pawn_center[0])**2 + (adjusted_mouse_pos[1] - pawn_center[1])**2)**0.5
                         if mouse_distance <= distance_threshold:
                             # Kiểm tra điều kiện được phép click
                             can_click = False
@@ -890,14 +1109,29 @@ def main(player_names=None):
                             
                             break  # Đặt break ra ngoài, chỉ thoát khỏi vòng lặp sau khi kiểm tra xong
        
+        # Vẽ map với vị trí cuộn
+        win.fill((0, 0, 0))  # Xóa màn hình
+        blit_with_scroll(win, bgBoard, (0, 0))
+
+        # Vẽ sidebar với vị trí cuộn
+        blit_with_scroll(win, bgSidebar, (725, 0))
+
         # Vẽ sao
         for star in stars:
-            win.blit(star.surf, star.rect)
+            star_rect = star.rect.copy()
+            star_rect.x -= scroll_x
+            star_rect.y -= scroll_y
+            win.blit(star.surf, star_rect)
 
-        # Vẽ sidebar và sprites
-        draw_sidebar(win, Statekpr)
+        # Vẽ sidebar với vị trí cuộn
+        draw_sidebar_with_scroll(win, Statekpr)
+
+        # Vẽ sprites với vị trí cuộn
         for entity in allSprites:
-            win.blit(entity.surf, entity.rect)
+            entity_rect = entity.rect.copy()
+            entity_rect.x -= scroll_x
+            entity_rect.y -= scroll_y
+            win.blit(entity.surf, entity_rect)
         
         # Vẽ các thông báo - đặt ở cuối để hiển thị trên cùng
         alert_manager.draw(win)
