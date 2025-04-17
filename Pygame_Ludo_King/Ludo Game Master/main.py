@@ -88,6 +88,80 @@ def draw_alert(win, text):
     text_rect = text_surface.get_rect(center=(winX // 2, y + 25))
     win.blit(text_surface, text_rect)
 
+def load_dialog():
+    """Tải background cho dialog từ file TMX"""
+    # Tạo surface cho dialog với kích thước 230x100
+    dialog_surface = pygame.Surface((230, 100))
+    
+    try:
+        # Load map từ file TMX
+        dialog_map = load_pygame('mapfinal/slide_bar.tmx')
+        
+        # Vẽ từng layer của map lên surface
+        for layer in dialog_map.visible_layers:
+            if hasattr(layer, "tiles"):
+                for x, y, gid in layer:
+                    tile = dialog_map.get_tile_image_by_gid(gid)
+                    if tile:
+                        dialog_surface.blit(tile, (x * dialog_map.tilewidth, 
+                                                 y * dialog_map.tileheight))
+    except Exception as e:
+        print(f"Error loading dialog TMX: {e}")
+        # Nếu load thất bại thì fill màu trắng
+        dialog_surface.fill((255, 255, 255))
+        
+    return dialog_surface
+
+def load_ranking():
+    """Tải background cho bảng xếp hạng từ file TMX"""
+    # Tạo surface cho bảng xếp hạng với kích thước 400x400
+    ranking_surface = pygame.Surface((400, 400))
+    
+    try:
+        # Load map từ file TMX
+        ranking_map = load_pygame('mapfinal/ranking.tmx')
+        
+        # Vẽ từng layer của map lên surface
+        for layer in ranking_map.visible_layers:
+            if hasattr(layer, "tiles"):
+                for x, y, gid in layer:
+                    tile = ranking_map.get_tile_image_by_gid(gid)
+                    if tile:
+                        ranking_surface.blit(tile, (x * ranking_map.tilewidth, 
+                                                  y * ranking_map.tileheight))
+                        
+    except Exception as e:
+        print(f"Error loading ranking TMX: {e}")
+        # Nếu load thất bại thì fill màu trắng
+        ranking_surface.fill((255, 255, 255))
+        
+    return ranking_surface
+
+def load_sidebar():
+    """Tải background sidebar từ file TMX"""
+    # Tạo surface cho sidebar với kích thước 200x725
+    sidebar_surface = pygame.Surface((200, 725))
+    
+    try:
+        # Load map từ file TMX
+        sidebar_map = load_pygame('mapfinal/slide_bar.tmx')
+        
+        # Vẽ từng layer của map lên surface
+        for layer in sidebar_map.visible_layers:
+            if hasattr(layer, "tiles"):
+                for x, y, gid in layer:
+                    tile = sidebar_map.get_tile_image_by_gid(gid)
+                    if tile:
+                        sidebar_surface.blit(tile, (x * sidebar_map.tilewidth, 
+                                                  y * sidebar_map.tileheight))
+                        
+    except Exception as e:
+        print(f"Error loading sidebar TMX: {e}")
+        # Nếu load thất bại thì fill màu trắng
+        sidebar_surface.fill((255, 255, 255))
+        
+    return sidebar_surface
+
 #load the board background
 def load_map():
     # Tạo surface mới có kích thước bằng với cửa sổ game
@@ -105,11 +179,29 @@ def load_map():
     
     return map_surface  # Trả về surface đã vẽ map
 
+def load_roll_button():
+    """Tải background cho nút roll từ file hình ảnh"""
+    try:
+        # Tải trực tiếp hình ảnh từ đường dẫn trong TSX
+        button_img = pygame.image.load('assets_ver1/TinySwords/UI/Ribbons/Ribbon_Yellow_3Slides.png')
+        return button_img
+    except Exception as e:
+        print(f"Error loading roll button image: {e}")
+        # Nếu load thất bại thì tạo surface màu vàng nhạt
+        button_surface = pygame.Surface((120, 40))
+        button_surface.fill((255, 255, 204))
+        return button_surface
+roll_button_bg = None
+
 # Khởi tạo bàn cờ từ Tiled
 bgBoard = load_map()
+bgSidebar = load_sidebar()
+bgRanking = load_ranking()
+bgDialog = load_dialog()
+
 
 def draw_dialog(win):
-    # Vẽ background mờ
+    # Vẽ background mờ cho toàn màn hình
     s = pygame.Surface((925, 725))
     s.set_alpha(128)
     s.fill((0, 0, 0))
@@ -117,7 +209,7 @@ def draw_dialog(win):
     
     # Vẽ dialog box
     dialog_rect = pygame.Rect(400, 200, 230, 100)
-    pygame.draw.rect(win, WHITE, dialog_rect)
+    win.blit(bgDialog, (400, 200))
     pygame.draw.rect(win, BLACK, dialog_rect, 2)
     
     # Vẽ text
@@ -138,66 +230,155 @@ def draw_dialog(win):
 def draw_sidebar(win, Statekpr):
     global star_effect_message, star_effect_time, dice_animating
     
-    # Vẽ background cho sidebar
-    pygame.draw.rect(win, WHITE, (725, 0, 200, 725))
+    win.blit(bgSidebar, (725, 0))
     
     # Font cho tiếng Việt
     vn_font = pygame.font.SysFont("segoeui", 20)
     
-    # Vẽ nút Tiêu đề
-    pygame.draw.rect(win, BLACK, title_button, 2)
-    title_text = vn_font.render(u"Tiêu đề", True, BLACK)
-    win.blit(title_text, (790, 15))
+    # Thay thế đoạn code vẽ nút tiêu đề bằng:
+    # Vẽ nút Tiêu đề với kích thước dựa trên text
+    bold_font = pygame.font.SysFont("segoeui", 20, bold=True)  # Tạo font chữ đậm
+    title_text = bold_font.render(u"Back", True, BLACK)
+    text_rect = title_text.get_rect()
+    # Thêm padding 20px cho chiều rộng và 10px cho chiều cao
+    title_button = pygame.Rect(795, 625, text_rect.width + 20, text_rect.height + 10)
+    # Cập nhật biến title_button toàn cục để sự kiện click hoạt động đúng
+    globals()['title_button'] = title_button
+
+    # Căn giữa text trong button
+    text_x = title_button.centerx - text_rect.width // 2
+    text_y = title_button.centery - text_rect.height // 2
+    win.blit(title_text, (text_x, text_y))
     
-    # Hiển thị người chơi đang đến lượt
-    text = vn_font.render(u"Lượt của:", True, BLACK)
-    win.blit(text, (735, 60))
+    # # Hiển thị người chơi đang đến lượt
+    # text = vn_font.render(u"Lượt của:", True, BLACK)
+    # win.blit(text, (735, 60))
     
-    # Nếu display_player chưa được khởi tạo, khởi tạo ban đầu dựa trên lượt
-    if Statekpr.display_player is None:
-        Statekpr.update_display_player()
+    # # Nếu display_player chưa được khởi tạo, khởi tạo ban đầu dựa trên lượt
+    # if Statekpr.display_player is None:
+    #     Statekpr.update_display_player()
             
-    # Hiển thị tên người chơi hiện tại
-    color = COLORS[Statekpr.display_player.color]
-    text = vn_font.render(Statekpr.display_player.name, True, color)
-    win.blit(text, (735, 90))
+    # # Hiển thị tên người chơi hiện tại
+    # color = COLORS[Statekpr.display_player.color]
+    # text = vn_font.render(Statekpr.display_player.name, True, color)
+    # win.blit(text, (735, 90))
     
-    # Vẽ nút tung xúc xắc
-    button_color = GRAY
-    if not roll_button_enabled or dice_animating:  # Thêm điều kiện dice_animating
-        button_color = (100, 100, 100)  # Tối màu khi disable hoặc đang animation
-    pygame.draw.rect(win, button_color, roll_button)
-    text = vn_font.render(u"Tung xúc xắc", True, WHITE)
-    win.blit(text, (770, 298))
+    
+    # Tạo font chữ đậm với font segoe ui
+    bold_font = pygame.font.SysFont("segoeui", 20, bold=True)
+    # Chọn màu text dựa trên trạng thái của nút
+    if not roll_button_enabled or dice_animating:
+        text_color = GRAY  # Màu xám khi vô hiệu hóa
+    else:
+        text_color = BLACK  # Màu đen khi hoạt động bình thường
+
+    roll_text = bold_font.render("ROLL", True, text_color)
+    
+    # Tính toán kích thước và vị trí cho button dựa trên text
+    text_rect = roll_text.get_rect()
+    padding_x = 40  # Padding ngang
+    padding_y = 20  # Padding dọc
+    button_width = text_rect.width + padding_x
+    button_height = text_rect.height + padding_y
+    
+    # Cập nhật vị trí button để căn giữa trong sidebar
+    button_x = 730 + ((200 - button_width) // 2)  # Căn giữa trong sidebar
+    button_y = 220  # Giữ nguyên vị trí y
+    
+    # Cập nhật Rect của roll_button
+    roll_button = pygame.Rect(button_x, button_y, button_width, button_height)
+    globals()['roll_button'] = roll_button  # Cập nhật biến toàn cục
+    
+    # Vẽ background của button
+    try:
+        # Chỉnh kích thước background phù hợp với kích thước button
+        scaled_bg = pygame.transform.scale(roll_button_bg, (button_width, button_height))
+        
+        # Nếu nút bị vô hiệu hóa hoặc đang animation, tạo hiệu ứng tối màu
+        if not roll_button_enabled or dice_animating:
+            # Tạo bản sao của hình ảnh để làm tối
+            darkened_bg = scaled_bg.copy()
+            
+            # Lặp qua từng pixel để chỉ làm tối những phần không trong suốt
+            for x in range(button_width):
+                for y in range(button_height):
+                    color = darkened_bg.get_at((x, y))
+                    # Nếu pixel không trong suốt (alpha > 0), giảm độ sáng của nó
+                    if color[3] > 0:  # Kiểm tra giá trị alpha
+                        # Giảm độ sáng bằng cách nhân với 0.7 (có thể điều chỉnh)
+                        r, g, b, a = color
+                        darkened_color = (int(r * 0.7), int(g * 0.7), int(b * 0.7), a)
+                        darkened_bg.set_at((x, y), darkened_color)
+            
+            # Vẽ phiên bản đã làm tối
+            win.blit(darkened_bg, (button_x, button_y))
+        else:
+            # Vẽ bình thường nếu nút đang được kích hoạt
+            win.blit(scaled_bg, (button_x, button_y))
+    except (TypeError, AttributeError):
+        # Nếu không có background hoặc lỗi, vẽ button mặc định
+        if not roll_button_enabled or dice_animating:
+            # Vẽ nút màu xám đậm khi vô hiệu hóa
+            pygame.draw.rect(win, (160, 160, 140), roll_button)  # Màu xám tối hơn
+        else:
+            # Vẽ nút màu vàng nhạt khi kích hoạt
+            pygame.draw.rect(win, (255, 255, 204), roll_button)  # Màu vàng nhạt
+        
+        # Vẽ viền đen
+        pygame.draw.rect(win, BLACK, roll_button, 2)
+    
+    # Tính toán vị trí để căn giữa text trong button mới
+    text_x = roll_button.centerx - text_rect.width // 2
+    text_y = roll_button.centery - text_rect.height // 2
+    
+    # Vẽ text đã được căn giữa
+    win.blit(roll_text, (text_x, text_y))
+
     
     # Hiển thị 2 hình xúc xắc
-    scaled_dice1 = pygame.transform.scale(current_dice1, (80, 80))
-    scaled_dice2 = pygame.transform.scale(current_dice2, (80, 80))
-    win.blit(scaled_dice1, (745, 140))
-    win.blit(scaled_dice2, (835, 140))
+    scaled_dice1 = pygame.transform.scale(current_dice1, (60, 60))
+    scaled_dice2 = pygame.transform.scale(current_dice2, (60, 60))
+    win.blit(scaled_dice1, (765, 80))
+    win.blit(scaled_dice2, (830, 80))
     
     # Hiển thị tổng hai xúc xắc CHỈ KHI ANIMATION KẾT THÚC
     if not dice_animating:  # Chỉ hiển thị khi animation kết thúc
         total = dice_num1 + dice_num2
-        total_text = vn_font.render(f"Tổng: {total}", True, BLACK)
-        win.blit(total_text, (790, 233))
+        # Tạo font chữ đậm với font segoe ui và cỡ chữ 24
+        bold_font = pygame.font.SysFont("segoeui", 16, bold=True)
+        total_text = bold_font.render(f"SUM POINT: {total}", True, (0, 0, 139))  # Màu xanh navy
+        # Tính toán vị trí để căn giữa text
+        text_rect = total_text.get_rect()
+        text_x = 825 - text_rect.width // 2
+        text_y = 185
+        win.blit(total_text, (text_x, text_y))
     
     # Hiển thị thông tin quân cờ của từng người chơi
-    y_pos = 360
+    y_pos = 310
     for player in Statekpr.players:
-        color = COLORS[player.color]
-        text = vn_font.render(f"{player.name}:", True, color)
-        win.blit(text, (735, y_pos))
         
-        # Đếm số quân về đích (counter = 52)
-        text = vn_font.render(f"Về đích: {player.pawns_home}", True, BLACK)
-        win.blit(text, (745, y_pos + 30))
+        # Xác định màu khung
+        frame_color = COLORS[player.color]
+        
+        is_current_player = (Statekpr.display_player == player)
+        
+        # Tạo hình chữ nhật cho khung
+        player_frame = pygame.Rect(755, y_pos + 20, 140, 45)
+        
+        # Vẽ khung nền
+        if is_current_player and not dice_animating:
+            # Vẽ viền đậm hơn cho người chơi hiện tại
+            pygame.draw.rect(win, frame_color, player_frame, 6)  # Viền dày 3px
+        else:
+            pygame.draw.rect(win, frame_color, player_frame, 1)  # Viền mỏng 1px
         
         # Hiển thị số lần bị đá
-        text = vn_font.render(f"Bị đá: {player.times_kicked}", True, BLACK)
-        win.blit(text, (745, y_pos + 55))
+        bold_font = pygame.font.SysFont("segoeui", 20, bold=True)
+        text = bold_font.render(f"DIE: {player.times_kicked}", True, (255, 0, 0))
+        win.blit(text, (810, y_pos + 25))
         
-        y_pos += 90
+        # Thêm khoảng cách giữa các khung
+        y_pos += 75
     
     # Hiển thị thông báo hiệu ứng sao
     if star_effect_message and pygame.time.get_ticks() - star_effect_time < 2000:
@@ -207,16 +388,16 @@ def draw_sidebar(win, Statekpr):
 
 def draw_ranking(win):
     """Vẽ bảng xếp hạng"""
-    # Vẽ background mờ
+    # Vẽ background mờ cho toàn màn hình
     s = pygame.Surface((925, 725))
     s.set_alpha(128)
     s.fill((0, 0, 0))
     win.blit(s, (0, 0))
     
-    # Vẽ bảng xếp hạng
+    # Vẽ background bảng xếp hạng từ file TMX
     ranking_rect = pygame.Rect(300, 100, 400, 400)
-    pygame.draw.rect(win, WHITE, ranking_rect)
-    pygame.draw.rect(win, BLACK, ranking_rect, 2)
+    win.blit(bgRanking, (300, 100))
+    pygame.draw.rect(win, BLACK, ranking_rect, 2)  # Vẽ viền đen
     
     # Vẽ tiêu đề
     vn_font = pygame.font.SysFont("segoeui", 36)
@@ -242,7 +423,10 @@ DICE_ANIMATION_FRAMES = 15  # Number of frames for animation
 DICE_ANIMATION_SPEED = 50   # Milliseconds between frames
 
 def main(player_names=None):
-    global alert_manager
+    global alert_manager, roll_button_bg
+    
+    # Tải background cho nút roll
+    roll_button_bg = load_roll_button()
     
     # Lấy thông tin về độ phân giải màn hình
     info = pygame.display.Info()
@@ -274,6 +458,8 @@ def main(player_names=None):
     Statekpr = Statekeep()
     #Initialize clock
     clock = pygame.time.Clock()
+    
+    Statekpr.update_display_player()
     
     # Khởi tạo các biến xúc xắc
     current_dice1 = dice_images[0]  # Mặt xúc xắc 1
@@ -371,7 +557,7 @@ def main(player_names=None):
                 if pawn.is_move:
                     pawn.update_animation()  # Cập nhật vị trí của quân trong animation
                     any_pawn_animating = True
-                elif hasattr(pawn, 'just_finished_animation') and pawn.just_finished_animation:
+                if hasattr(pawn, 'just_finished_animation') and pawn.just_finished_animation:
                     # Quân vừa hoàn thành animation, xử lý các hiệu ứng sau di chuyển
                     pawn.just_finished_animation = False
                     
@@ -442,7 +628,7 @@ def main(player_names=None):
                             Statekpr.find_next_valid_player()
                             
                             # Cập nhật người chơi hiển thị sau khi chuyển lượt
-                            Statekpr.update_display_player()        
+                            Statekpr.update_display_player()   
                     
                     # Kiểm tra nếu quân đã về đích (counter = 52 hoặc 53) để tăng số quân về đích
                     if pawn.counter == 96 or pawn.counter == 97:
@@ -603,6 +789,7 @@ def main(player_names=None):
                         # Không có nước đi hợp lệ, chuyển lượt và giữ nút enable
                         roll_button_enabled = True
                         Statekpr.find_next_valid_player()
+                        Statekpr.update_display_player()
                 
                 # Kiểm tra click vào quân cờ khi nút tung xúc xắc đang disable
                 if not roll_button_enabled:
@@ -714,9 +901,6 @@ def main(player_names=None):
         
         # Vẽ các thông báo - đặt ở cuối để hiển thị trên cùng
         alert_manager.draw(win)
-        
-        # Cập nhật màn hình
-        pygame.display.update()
             
         # Vẽ dialog nếu đang hiển thị
         if showing_dialog:
