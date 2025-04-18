@@ -22,6 +22,7 @@ class MainBoard:
         pygame.display.set_caption("Ludo AI")
         self.font = pygame.font.SysFont("tahoma", 74)
         self.small_font = pygame.font.SysFont("tahoma", 36)
+        self.is_bot = [False] * 4  # Track which players are AI/bots
         
         # Thêm biến quản lý scroll
         self.scroll_x = 0
@@ -242,6 +243,23 @@ class MainBoard:
             # Tạo hộp nhập văn bản với vị trí tùy chỉnh dựa trên khoảng cách
             input_rect = pygame.Rect(90 + self.player_number_spacing - self.scroll_x, y_offset - self.scroll_y, 200, 40)
             self.input_boxes.append(input_rect)
+
+            # Add toggle button for AI/Human
+            toggle_rect = pygame.Rect(570 - self.scroll_x, y_offset - self.scroll_y, 100, 40)
+            pygame.draw.rect(self.screen, (240, 240, 240), toggle_rect)
+            pygame.draw.rect(self.screen, (0, 0, 0), toggle_rect, 2)
+            toggle_text = "AI" if self.is_bot[i] else "Human"
+            toggle_surface = input_font.render(toggle_text, True, (0, 0, 0))
+            toggle_x = toggle_rect.centerx - toggle_surface.get_width() // 2
+            toggle_y = toggle_rect.centery - toggle_surface.get_height() // 2
+            self.screen.blit(toggle_surface, (toggle_x, toggle_y))
+            
+            # Store toggle button rect for click detection
+            if not hasattr(self, 'toggle_boxes'):
+                self.toggle_boxes = []
+            while len(self.toggle_boxes) <= i:
+                self.toggle_boxes.append(None)
+            self.toggle_boxes[i] = toggle_rect
             
             
             # Luôn hiển thị text đã nhập
@@ -435,18 +453,33 @@ class MainBoard:
                             self.player_names = ["", "", "", ""]
                         elif self.buttons["ok"].collidepoint(event.pos):
                             if all(name.strip() for name in self.player_names):
-                                return self.player_names
+                                # Add [AI] suffix to AI player names and track AI players
+                                player_names_with_ai = []
+                                ai_players = []
+                                for i in range(4):
+                                    name = self.player_names[i]
+                                    if self.is_bot[i]:
+                                        name = f"{name} [AI]"
+                                        ai_players.append(i)  # Track which players are AI
+                                    player_names_with_ai.append(name)
+                                return player_names_with_ai, ai_players  # Return both names and AI player indices
                         else:
-                            # Điều chỉnh vùng nhấp vào input boxes
-                            for i in range(len(self.input_boxes)):
-                                adjusted_box = pygame.Rect(
-                                    self.input_boxes[i].x,
-                                    self.input_boxes[i].y,
-                                    self.input_boxes[i].width,
-                                    self.input_boxes[i].height
-                                )
-                                if adjusted_box.collidepoint(event.pos):
-                                    self.active_input = i
+                            # Check for toggle button clicks first
+                            for i in range(len(self.toggle_boxes)):
+                                if self.toggle_boxes[i].collidepoint(event.pos):
+                                    self.is_bot[i] = not self.is_bot[i]
+                                    break
+                            else:
+                                # If no toggle was clicked, check input boxes
+                                for i in range(len(self.input_boxes)):
+                                    adjusted_box = pygame.Rect(
+                                        self.input_boxes[i].x,
+                                        self.input_boxes[i].y,
+                                        self.input_boxes[i].width,
+                                        self.input_boxes[i].height
+                                    )
+                                    if adjusted_box.collidepoint(event.pos):
+                                        self.active_input = i
                     else:
                         # Điều chỉnh vùng nhấp vào các nút trong menu chính
                         for btn_name, btn_rect in self.buttons.items():
@@ -497,8 +530,8 @@ class MainBoard:
         
         while True:
             result = self.handle_events()
-            if result:  # Nếu handle_events trả về kết quả (tức là tên người chơi)
-                return result  # Trả về tên người chơi cho mã gọi
+            if result:  # Nếu handle_events trả về kết quả (tức là tên người chơi và trạng thái bot)
+                return result  # Trả về tuple (tên người chơi, trạng thái bot) cho mã gọi
 
             if self.show_rules:
                 self.draw_rules()
