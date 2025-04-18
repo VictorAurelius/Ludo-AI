@@ -128,6 +128,14 @@ class Pawn(pygame.sprite.Sprite):
         # is the pawn a king? not fully implemented yet
         self.king = False
         self.kingPawn = 0
+        # Thêm các thuộc tính cho hiệu ứng phát sáng
+        self.clickable = False  # Đánh dấu quân có thể click hay không
+        self.glow_alpha = 0  # Độ trong suốt của hiệu ứng phát sáng
+        self.glow_increasing = True  # Hướng thay đổi độ trong suốt (tăng/giảm)
+        self.glow_speed = 10  # Tốc độ thay đổi độ trong suốt
+        self.glow_min = 0  # Giá trị tối thiểu của độ trong suốt
+        self.glow_max = 200  # Giá trị tối đa của độ trong suốt
+        self.glow_color = (255, 255, 0)  # Màu vàng cho hiệu ứng phát sáng
         # Thêm biến để xử lý teleport
         self.teleporting = False
         self.teleport_phase = None  # "starting" hoặc "end"
@@ -156,7 +164,47 @@ class Pawn(pygame.sprite.Sprite):
         self.has_reached_finish = False  # Đánh dấu quân đã về đích chưa
         self.finish_position = None  # Vị trí cuối cùng sau khi về đích
 
+    def update_glow(self):
+        """Cập nhật hiệu ứng phát sáng"""
+        if not self.clickable:
+            self.glow_alpha = 0
+            return
+            
+        # Thay đổi độ trong suốt theo hướng
+        if self.glow_increasing:
+            self.glow_alpha += self.glow_speed
+            if self.glow_alpha >= self.glow_max:
+                self.glow_alpha = self.glow_max
+                self.glow_increasing = False
+        else:
+            self.glow_alpha -= self.glow_speed
+            if self.glow_alpha <= self.glow_min:
+                self.glow_alpha = self.glow_min
+                self.glow_increasing = True
 
+    def draw_with_glow(self, surface, adjusted_pos=None):
+        """Vẽ hiệu ứng phát sáng cho quân cờ"""
+        if not self.clickable or self.glow_alpha <= 0:
+            return
+        
+        # Xác định vị trí vẽ
+        if adjusted_pos:
+            center_x, center_y = adjusted_pos
+        else:
+            center_x, center_y = self.rect.center
+        
+        # Tạo surface mới cho hiệu ứng phát sáng
+        glow_size = 30  # Kích thước của hiệu ứng phát sáng
+        glow_surface = pygame.Surface((glow_size, glow_size), pygame.SRCALPHA)
+        
+        # Vẽ hình tròn phát sáng
+        pygame.draw.circle(glow_surface, (*self.glow_color, self.glow_alpha), 
+                        (glow_size//2, glow_size//2), glow_size//2)
+        
+        # Vẽ hiệu ứng phát sáng lên surface chính
+        glow_rect = glow_surface.get_rect(center=(center_x, center_y))
+        surface.blit(glow_surface, glow_rect)
+        
     #pawn movement method
     def move(self, dice, statekeeper):
         StateKpr = statekeeper
