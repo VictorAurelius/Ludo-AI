@@ -723,6 +723,9 @@ def main(player_names=None):
             for pawn in player.pawnlist:
                 # Cập nhật animation
                 pawn.update_animation()
+                if pawn.is_dying:
+                    pawn.update_animation()
+                    any_pawn_animating = True
                 # Thêm kiểm tra teleporting
                 if pawn.teleporting:
                     pawn.update_animation()
@@ -758,7 +761,48 @@ def main(player_names=None):
                     elif not teleported:
                         teleport_chain_active = False
                     
-                    if hasattr(pawn, 'teleporting') and pawn.teleporting == False and pawn.counter == 1:
+                    if hasattr(pawn, 'teleporting') and pawn.teleporting == False and pawn.counter > 0:
+                        if pawn.counter == 96 or pawn.counter == 97:
+                            print('PawnKing')
+                            pawn.counter = 0
+                            # Tìm người chơi sở hữu quân này
+                            for player in Statekpr.players:
+                                if pawn in player.pawnlist:
+                                    # Tăng số quân về đích nếu chưa được tăng
+                                    if not hasattr(pawn, 'has_reached_finish') or not pawn.has_reached_finish:
+                                        player.pawns_home += 1
+                                        pawn.has_reached_finish = True
+                                        
+                                    # Xác định vị trí về đích theo màu
+                                    if player.color == "Red":
+                                        finish_pos_dict = scale_finish_dict(RED_FINISH_POSITIONS, TILE_SIZE)
+                                    elif player.color == "Blue":
+                                        finish_pos_dict = scale_finish_dict(BLUE_FINISH_POSITIONS, TILE_SIZE)
+                                    elif player.color == "Yellow":
+                                        finish_pos_dict = scale_finish_dict(YELLOW_FINISH_POSITIONS, TILE_SIZE)
+                                    elif player.color == "Green":
+                                        finish_pos_dict = scale_finish_dict(GREEN_FINISH_POSITIONS, TILE_SIZE)
+                                    else:
+                                        finish_pos_dict = None
+                                    
+                                    # Nếu có vị trí đích, thiết lập để teleport đến đó
+                                    if finish_pos_dict and pawn.number in finish_pos_dict:
+                                        pawn.finish_position = finish_pos_dict[pawn.number]
+                                        pawn.has_reached_finish = True
+                                        
+                                        # Kích hoạt teleport đến vị trí cuối cùng
+                                        pawn.start_teleport(pawn.finish_position)
+                                        teleported = True
+                                        
+                                        # Cập nhật trạng thái quân
+                                        pawn.activepawn = False
+                                        pawn.king = True
+                                        
+                                        # Kiểm tra nếu người chơi vừa về đích hết và chưa có trong danh sách
+                                        if player.pawns_home == 4 and player not in finished_players:
+                                            finished_players.append(player)
+                                    break
+                        
                         # Kiểm tra có quân nào của đối thủ ở vị trí mới không
                         new_pos = pawn.rect.center
                         for other_player in Statekpr.players:
@@ -766,8 +810,7 @@ def main(player_names=None):
                                 for other_pawn in other_player.pawnlist:
                                     if other_pawn.rect.center == new_pos:
                                         # Đá quân về chuồng và tăng biến đếm số lần bị đá
-                                        other_pawn.counter = 0
-                                        other_pawn.rect.center = other_pawn.startpos
+                                        other_pawn.start_death_animation()
                                         other_player.pawns -= 1
                                         other_player.times_kicked += 1
                                         break
@@ -821,8 +864,7 @@ def main(player_names=None):
                             for other_pawn in other_player.pawnlist:
                                 if other_pawn.rect.center == new_pos:
                                     # Đá quân về chuồng và tăng biến đếm số lần bị đá
-                                    other_pawn.counter = 0
-                                    other_pawn.rect.center = other_pawn.startpos
+                                    other_pawn.start_death_animation()
                                     other_player.pawns -= 1
                                     other_player.times_kicked += 1
                                     break

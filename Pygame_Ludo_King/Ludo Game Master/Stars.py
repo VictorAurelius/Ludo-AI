@@ -45,32 +45,10 @@ class Star(pygame.sprite.Sprite):
                 pawn.counter = new_pos
                 pawn.rect.center = pawn.dict[new_pos]
                 return "teleported"
-        elif effect == 0:
-            # Dịch chuyển ngẫu nhiên
-            valid_positions = []
-            for pos in range(1, 97):
-                can_move = True
-                new_pos = pawn.dict[pos]
-                # Kiểm tra vị trí có quân nào không
-                for player in statekeeper.players:
-                    for other_pawn in player.pawnlist:
-                        if other_pawn != pawn and other_pawn.rect.center == new_pos:
-                            can_move = False
-                            break
-                    if not can_move:
-                        break
-                if can_move:
-                    valid_positions.append(pos)
-            
-            if valid_positions:
-                new_pos = random.choice(valid_positions)
-                pawn.counter = new_pos
-                pawn.rect.center = pawn.dict[new_pos]
-                return "teleported"
         else:
-            # Về chuồng
-            pawn.counter = 0
-            pawn.rect.center = pawn.startpos
+            # Về chuồng (thêm animation chết trước)
+            pawn.start_death_animation()
+            
             # Tìm người chơi sở hữu quân này
             for player in statekeeper.players:
                 if pawn in player.pawnlist:

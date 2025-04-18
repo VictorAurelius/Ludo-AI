@@ -147,6 +147,9 @@ class Pawn(pygame.sprite.Sprite):
         self.last_frame_update = pygame.time.get_ticks()
         self.animations = {}  # Dictionary chứa các animation
         
+        # Thêm thuộc tính cho animation chết
+        self.is_dying = False
+        
         # Thời gian giữa mỗi chuyển frame
         self.frame_delay = 100  # Milliseconds
         
@@ -232,6 +235,12 @@ class Pawn(pygame.sprite.Sprite):
         # Lưu hướng để sau khi teleport quân sẽ đứng yên với hướng này
         self.teleport_direction = "right" if target_x > current_x else "left"
         
+    def start_death_animation(self):
+        """Bắt đầu animation chết trước khi quân về chuồng"""
+        self.is_dying = True
+        self.current_state = "dead"
+        self.frame_index = 0
+        self.last_frame_update = pygame.time.get_ticks()    
         
     def setup_animation_path(self, start_pos, end_pos):
         """Tạo đường đi mượt mà giữa các ô"""
@@ -296,6 +305,42 @@ class Pawn(pygame.sprite.Sprite):
             self.current_state = f"walk_{first_direction}"
             
     def update_animation(self):
+        # Xử lý animation chết
+        if self.is_dying:
+            current_time = pygame.time.get_ticks()
+    
+            # Kiểm tra xem đã đến lúc cập nhật frame chưa
+            if current_time - self.last_frame_update > self.frame_delay:
+                # Lấy số frame trong animation chết
+                if "dead" in self.animations and self.animations["dead"]:
+                    num_frames = len(self.animations["dead"])
+                    
+                    # Cập nhật frame index
+                    self.frame_index += 1
+                    
+                    # Kiểm tra kết thúc animation
+                    if self.frame_index >= num_frames:
+                        # Animation chết kết thúc, đưa quân về chuồng
+                        self.is_dying = False
+                        self.rect.center = self.startpos
+                        self.counter = 0
+                        
+                        # Reset về trạng thái đứng yên
+                        self.current_state = "stand_left"
+                        self.frame_index = 0
+                    else:
+                        # Cập nhật surface hiện tại
+                        frame_data = self.animations["dead"][self.frame_index % num_frames]
+                        self.surf = frame_data[0]
+                        
+                        # Đặt lại colorkey và rect
+                        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+                        old_center = self.rect.center
+                        self.rect = self.surf.get_rect(center=old_center)
+                    
+                    # Cập nhật thời gian frame cuối
+                    self.last_frame_update = current_time
+        
         if self.teleporting:
             
             current_time = pygame.time.get_ticks()
@@ -436,6 +481,13 @@ class Pawn(pygame.sprite.Sprite):
     def load_animations(self, tileset_path):
         """Tải animations từ file tileset"""
         self.animations = load_animations_from_tileset(tileset_path)
+        # Tải animation chết từ file Dead.tsx
+        if os.path.exists(dead_anim_path):
+            dead_animations = load_animations_from_tileset(dead_anim_path)
+            if dead_animations:
+                # Thêm animation chết vào dictionary animations
+                for anim_name, frames in dead_animations.items():
+                    self.animations[anim_name] = frames
                 
     #update the pawn status variables to represent the current status of the pawns.
     def update_pawn_state(self, activeplayer, nextplayer):        
@@ -492,9 +544,10 @@ allSprites = pygame.sprite.Group()
 
 # Đường dẫn đến các file tileset animation
 blue_anim_path = 'mapfinal/WBlue_Animation.tsx'
-red_anim_path = 'mapfinal/WBlue_Animation.tsx'  # Giả sử có file này
-yellow_anim_path = 'mapfinal/WBlue_Animation.tsx'  # Giả sử có file này
-green_anim_path = 'mapfinal/WBlue_Animation.tsx'  # Giả sử có file này
+red_anim_path = 'mapfinal/WRed_Animation.tsx'  # Giả sử có file này
+yellow_anim_path = 'mapfinal/WYellow_Animation.tsx'  # Giả sử có file này
+green_anim_path = 'mapfinal/WPurple_Animation.tsx'  # Giả sử có file này
+dead_anim_path = 'mapfinal/Dead.tsx'  # Animation chết cho tất cả quân cờ
 
 # Hàm helper để chuyển đổi dictionary
 def scale_dict(dict_pos, scale):
