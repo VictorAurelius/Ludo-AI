@@ -27,9 +27,10 @@ def run_game():
         try:
             # Chạy màn hình chính và nhận tên người chơi
             menu = MainBoard()
-            player_names = menu.run()
+            result = menu.run()
             
-            if player_names:
+            if result:
+                player_names, _ = result  # We only need player names, AI is determined by [AI] suffix
                 # Đảm bảo main module được import lại mỗi lần để tái khởi tạo
                 try:
                     # Xóa module main từ sys.modules để đảm bảo nó được tải lại hoàn toàn
@@ -44,7 +45,7 @@ def run_game():
                         del sys.modules['States']
                     if 'Stars' in sys.modules:
                         del sys.modules['Stars']
-                    if 'alert_manager' in sys.modules:  # Thêm dòng này để reload AlertManager
+                    if 'alert_manager' in sys.modules:
                         del sys.modules['alert_manager']
                         
                     # Chạy garbage collector để giải phóng bộ nhớ
@@ -54,7 +55,7 @@ def run_game():
                     import main
                     
                     # Gọi main với tên người chơi đã nhập
-                    result = main.main(player_names)
+                    result = main.main(player_names=player_names)
                     
                     # Xử lý kết quả
                     if result == False:  # Người chơi muốn thoát game hoàn toàn

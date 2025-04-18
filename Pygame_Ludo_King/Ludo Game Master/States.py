@@ -16,14 +16,14 @@ class Statekeep:
         self.yellowTurn = False
         self.greenTurn = False
         # this list is useful for assigning the current players turn to a variable named currenturn
-        self.turnlist = [self.redTurn, self.blueTurn, self.yellowTurn, self.greenTurn]              
+        self.turnlist = [self.redTurn, self.blueTurn, self.yellowTurn, self.greenTurn]
         #assign player active state variables
         self.redActive = True
         self.blueActive = False
         self.yellowActive = False
-        self.greenActive = False        
+        self.greenActive = False
         # this list is useful for assigning the active player to a variable named activeplayer
-        self.activelist = [self.redActive, self.blueActive, self.yellowActive, self.greenActive]        
+        self.activelist = [self.redActive, self.blueActive, self.yellowActive, self.greenActive]
         #set pawn groups to status keeper attributes
         self.redpawns = RedPawnList
         self.bluepawns = BluePawnList
@@ -34,18 +34,21 @@ class Statekeep:
         self.bluecounters = []
         self.yellowcounters = []
         self.greencounters = []
-        #set the counters lists with values upon initialization 
+        #set the counters lists with values upon initialization
         self.set_counterlist_status()
+        
         #Initialize Player Objects and append to main player list    
         self.players.append(Player('Player1', 'Red', self.redpawns))
         self.players.append(Player('Player2', 'Blue', self.bluepawns))
         self.players.append(Player('Player3', 'Yellow', self.yellowpawns))
-        self.players.append(Player('Player4', 'Green', self.greenpawns))   
+        self.players.append(Player('Player4', 'Green', self.greenpawns))
+        
         #assign Player objects to attribute variables from the players list
         self.playerRed = self.players[0]
         self.playerBlue = self.players[1]
         self.playerYellow = self.players[2]
         self.playerGreen = self.players[3]
+        
         # set initial active and next player
         self.activeplayer = self.playerRed
         self.nextplayer = self.playerBlue
