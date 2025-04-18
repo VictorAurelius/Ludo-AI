@@ -801,6 +801,7 @@ def main(player_names=None):
                                         # Kiểm tra nếu người chơi vừa về đích hết và chưa có trong danh sách
                                         if player.pawns_home == 4 and player not in finished_players:
                                             finished_players.append(player)
+                                            alert_manager.add_alert(f"Người chơi {player.name} đã hoàn thành!", 3000)
                                     break
                         
                         # Kiểm tra có quân nào của đối thủ ở vị trí mới không
