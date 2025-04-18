@@ -766,7 +766,7 @@ def main(player_names=None):
                         teleport_chain_active = False
                     
                     if hasattr(pawn, 'teleporting') and pawn.teleporting == False and pawn.counter > 0:
-                        if pawn.counter == 96 or pawn.counter == 97:
+                        if (pawn.counter == 96 or pawn.counter == 97) and not pawn.king:
                             print('PawnKing')
                             pawn.counter = 0
                             # Tìm người chơi sở hữu quân này

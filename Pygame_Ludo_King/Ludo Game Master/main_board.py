@@ -230,10 +230,6 @@ class MainBoard:
             input_rect = pygame.Rect(90 + self.player_number_spacing - self.scroll_x, y_offset - self.scroll_y, 200, 40)
             self.input_boxes.append(input_rect)
             
-            # Chỉ hiển thị khung khi đang active
-            if i == self.active_input:
-                pygame.draw.rect(self.screen, (240, 240, 240), input_rect)
-                pygame.draw.rect(self.screen, (0, 0, 0), input_rect, 2)
             
             # Luôn hiển thị text đã nhập
             name_text = input_font.render(self.player_names[i], True, (0, 0, 0))
