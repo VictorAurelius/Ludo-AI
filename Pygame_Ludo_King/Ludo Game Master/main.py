@@ -193,6 +193,35 @@ def load_roll_button():
         return button_surface
 roll_button_bg = None
 
+def load_quit_dialog():
+    """Tải background cho dialog từ file quit_game.tmx"""
+    try:
+        # Load map từ file TMX
+        quit_map = load_pygame('mapfinal/quit_game.tmx')
+        
+        # Lấy kích thước từ file TMX (số ô * kích thước mỗi ô)
+        width = quit_map.width * quit_map.tilewidth
+        height = quit_map.height * quit_map.tileheight
+        
+        # Tạo surface với kích thước lấy từ file TMX
+        dialog_surface = pygame.Surface((width, height))
+        
+        # Vẽ từng layer của map lên surface
+        for layer in quit_map.visible_layers:
+            if hasattr(layer, "data"):
+                for x, y, gid in layer:
+                    tile = quit_map.get_tile_image_by_gid(gid)
+                    if tile:
+                        dialog_surface.blit(tile, (x * quit_map.tilewidth, 
+                                                 y * quit_map.tileheight))
+    except Exception as e:
+        print(f"Error loading quit_game.tmx: {e}")
+        # Nếu load thất bại thì fill màu trắng và sử dụng kích thước mặc định
+        dialog_surface = pygame.Surface((300, 150))
+        dialog_surface.fill((255, 255, 255))
+        
+    return dialog_surface, (width, height)
+
 # Khởi tạo bàn cờ từ Tiled
 bgBoard = load_map()
 bgSidebar = load_sidebar()
@@ -201,31 +230,64 @@ bgDialog = load_dialog()
 
 
 def draw_dialog(win):
+    # Load the quit_game.tmx file
+    bgQuitDialog, (dialog_width, dialog_height) = load_quit_dialog()
+    
     # Vẽ background mờ cho toàn màn hình
     s = pygame.Surface((925, 725))
     s.set_alpha(128)
     s.fill((0, 0, 0))
     win.blit(s, (0, 0))
     
-    # Vẽ dialog box
-    dialog_rect = pygame.Rect(400, 200, 230, 100)
-    win.blit(bgDialog, (400, 200))
+    # Tính toán vị trí để đặt dialog ở giữa màn hình
+    dialog_x = (925 - dialog_width) // 2
+    dialog_y = (725 - dialog_height) // 2
+    
+    # Vẽ dialog box với kích thước lấy từ TMX file
+    dialog_rect = pygame.Rect(dialog_x, dialog_y, dialog_width, dialog_height)
+    win.blit(bgQuitDialog, (dialog_x, dialog_y))
     pygame.draw.rect(win, BLACK, dialog_rect, 2)
     
     # Vẽ text
     vn_font = pygame.font.SysFont("segoeui", 24)
     text = vn_font.render(u"Bạn có muốn trở về", True, BLACK)
     text2 = vn_font.render(u"trang tiêu đề không?", True, BLACK)
-    win.blit(text, (410, 200))
-    win.blit(text2, (410, 220))
+    
+    # Tính toán vị trí để đặt text căn giữa dialog
+    text_x = dialog_x + (dialog_width - text.get_width()) // 2
+    text_y = dialog_y + 20
+    text2_x = dialog_x + (dialog_width - text2.get_width()) // 2
+    text2_y = text_y + 30
+    
+    win.blit(text, (text_x, text_y))
+    win.blit(text2, (text2_x, text2_y))
+    
+    # Tính toán vị trí cho nút Có/Không
+    button_y = dialog_y + dialog_height - 50
+    yes_width = 60
+    no_width = 90
+    spacing = 20
+    total_width = yes_width + no_width + spacing
+    
+    yes_x = dialog_x + (dialog_width - total_width) // 2
+    no_x = yes_x + yes_width + spacing
+    
+    # Cập nhật nút Có/Không
+    global yes_button, no_button
+    yes_button = pygame.Rect(yes_x, button_y, yes_width, 30)
+    no_button = pygame.Rect(no_x, button_y, no_width, 30)
     
     # Vẽ nút Có/Không
     pygame.draw.rect(win, BLACK, yes_button, 2)
     pygame.draw.rect(win, BLACK, no_button, 2)
     yes_text = vn_font.render(u"Có", True, BLACK)
     no_text = vn_font.render(u"Không", True, BLACK)
-    win.blit(yes_text, (425, 255))
-    win.blit(no_text, (540, 255))
+    
+    # Căn giữa text trong các nút
+    win.blit(yes_text, (yes_x + (yes_width - yes_text.get_width()) // 2, 
+                       button_y + (30 - yes_text.get_height()) // 2))
+    win.blit(no_text, (no_x + (no_width - no_text.get_width()) // 2, 
+                      button_y + (30 - no_text.get_height()) // 2))
 
 def draw_sidebar(win, Statekpr):
     global star_effect_message, star_effect_time, dice_animating

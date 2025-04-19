@@ -48,7 +48,7 @@ def load_ranking():
     
     try:
         # Load map từ file TMX
-        ranking_map = load_pygame('mapfinal/mapludo.tmx')
+        ranking_map = load_pygame('mapfinal/ranking.tmx')
         
         # Vẽ từng layer của map lên surface
         for layer in ranking_map.visible_layers:
