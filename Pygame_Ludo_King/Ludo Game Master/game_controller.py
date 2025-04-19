@@ -33,6 +33,7 @@ def run_game():
                 player_names, _ = result  # We only need player names, AI is determined by [AI] suffix
                 # Đảm bảo main module được import lại mỗi lần để tái khởi tạo
                 try:
+                    import random
                     # Xóa module main từ sys.modules để đảm bảo nó được tải lại hoàn toàn
                     import sys
                     if 'main' in sys.modules:
