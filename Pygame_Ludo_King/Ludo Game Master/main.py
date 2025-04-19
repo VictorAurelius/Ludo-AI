@@ -1371,7 +1371,7 @@ def main(player_names=None):
                     animation_timer = 0
                     last_animation_time = pygame.time.get_ticks()
                     # Pre-determine final dice values
-                    import random
+                    
                     final_dice_value1 = random.randint(0, 5)
                     final_dice_value2 = random.randint(0, 5)
                     dice_num1 = final_dice_value1 + 1  # Store final numbers (1-6)
