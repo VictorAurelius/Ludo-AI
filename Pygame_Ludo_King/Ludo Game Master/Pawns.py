@@ -53,72 +53,134 @@ GREEN_FINISH_POSITIONS = {
 def scale_finish_dict(finish_dict, scale):
     return {k: ((v[0] * scale) - 13, (v[1] * scale) - 13) for k, v in finish_dict.items()}
 
-# Tạo hàm để load animation từ Tiled
 def load_animations_from_tileset(tileset_path):
     animations = {}
-    if os.path.exists(tileset_path):
-        try:
-            import xml.etree.ElementTree as ET
-            
-            # Đọc file tsx bằng ElementTree thay vì pytmx
-            tree = ET.parse(tileset_path)
-            root = tree.getroot()
-            
-            # Lấy thông tin cơ bản của tileset
-            tilewidth = int(root.get('tilewidth', 0))
-            tileheight = int(root.get('tileheight', 0))
-            
-            # Lấy đường dẫn tới file ảnh
-            image_element = root.find('image')
-            if image_element is not None:
-                image_path = image_element.get('source')
-                # Chuẩn hóa đường dẫn tới file ảnh
-                base_dir = os.path.dirname(tileset_path)
-                relative_image_path = os.path.normpath(os.path.join(os.path.basename(base_dir), os.path.basename(image_path)))
-                image_path = resource_path(relative_image_path)
-                
-                # Tải spritesheet nếu file tồn tại
-                if os.path.exists(image_path):
-                    spritesheet = pygame.image.load(image_path).convert_alpha()
-                    
-                    # Lấy các animation từ các phần tử tile
-                    for tile_elem in root.findall('tile'):
-                        tile_id = int(tile_elem.get('id', 0))
-                        
-                        # Tìm thuộc tính animation_name
-                        animation_name = None
-                        prop_elem = tile_elem.find('properties/property[@name="animation_name"]')
-                        if prop_elem is not None:
-                            animation_name = prop_elem.get('value')
-                        
-                        if animation_name:
-                            # Tìm các frame của animation
-                            animation_elem = tile_elem.find('animation')
-                            if animation_elem is not None:
-                                animation_frames = []
-                                
-                                for frame_elem in animation_elem.findall('frame'):
-                                    frame_id = int(frame_elem.get('tileid', 0))
-                                    duration = int(frame_elem.get('duration', 100))
-                                    
-                                    # Tính vị trí của frame trong spritesheet
-                                    columns = int(root.get('columns', 1))
-                                    frame_x = (frame_id % columns) * tilewidth
-                                    frame_y = (frame_id // columns) * tileheight
-                                    
-                                    # Cắt frame từ spritesheet
-                                    frame_image = pygame.Surface((tilewidth, tileheight), pygame.SRCALPHA)
-                                    frame_image.blit(spritesheet, (0, 0), pygame.Rect(frame_x, frame_y, tilewidth, tileheight))
-                                    
-                                    # Thêm frame vào animation
-                                    animation_frames.append((frame_image, duration))
-                                
-                                # Lưu animation
-                                if animation_frames:
-                                    animations[animation_name] = animation_frames
-        except Exception as e:
-            print(f"Loi khi tai animation tu file tsx: {e}")
+    if not os.path.exists(tileset_path):
+        print(f"Animation tileset not found: {tileset_path}")
+        return animations
     
+    try:
+        import xml.etree.ElementTree as ET
+        
+        # Debug info
+        print(f"Loading tileset: {tileset_path}")
+        
+        # Parse TSX file
+        tree = ET.parse(tileset_path)
+        root = tree.getroot()
+        
+        # Get tileset basic info
+        tilewidth = int(root.get('tilewidth', 0))
+        tileheight = int(root.get('tileheight', 0))
+        columns = int(root.get('columns', 1))
+        
+        # Find the image element
+        image_element = root.find('image')
+        if image_element is None:
+            print(f"No image element found in tileset: {tileset_path}")
+            return animations
+        
+        image_source = image_element.get('source')
+        if not image_source:
+            print(f"No source attribute in image element: {tileset_path}")
+            return animations
+        
+        # Try multiple path resolution strategies
+        spritesheet = None
+        image_path = None
+        
+        # List of possible paths to try
+        possible_paths = [
+            # 1. Direct resource path of image source
+            resource_path(image_source),
+            
+            # 2. Just the filename with resource_path
+            resource_path(os.path.basename(image_source)),
+            
+            # 3. Relative to tileset directory
+            resource_path(os.path.join(os.path.dirname(tileset_path), image_source)),
+            
+            # 4. Special handling for mapfinal directory structure
+            resource_path(os.path.join('mapfinal', os.path.basename(image_source))),
+            
+            # 5. Parent directory of tileset + image
+            resource_path(os.path.join(
+                os.path.dirname(os.path.dirname(tileset_path)), 
+                os.path.basename(image_source)
+            ))
+        ]
+        
+        # Try each path until one works
+        for path in possible_paths:
+            try:
+                if os.path.exists(path):
+                    print(f"Trying path: {path}")
+                    spritesheet = pygame.image.load(path).convert_alpha()
+                    image_path = path
+                    print(f"Successfully loaded sprite from: {path}")
+                    break
+            except Exception as e:
+                print(f"Failed to load from {path}: {e}")
+                continue
+        
+        if spritesheet is None:
+            print(f"Failed to load spritesheet for {tileset_path}")
+            print(f"Tried paths: {possible_paths}")
+            return animations
+            
+        # Process animation tiles
+        for tile_elem in root.findall('tile'):
+            tile_id = int(tile_elem.get('id', 0))
+            
+            # Find animation_name property
+            animation_name = None
+            
+            # Try direct XPath query first
+            prop_elem = tile_elem.find("./properties/property[@name='animation_name']")
+            if prop_elem is not None:
+                animation_name = prop_elem.get('value')
+            
+            # If not found, try iterating through properties
+            if animation_name is None:
+                props = tile_elem.find('properties')
+                if props is not None:
+                    for prop in props.findall('property'):
+                        if prop.get('name') == 'animation_name':
+                            animation_name = prop.get('value')
+                            break
+            
+            if animation_name:
+                # Process animation frames
+                animation_elem = tile_elem.find('animation')
+                if animation_elem is not None:
+                    animation_frames = []
+                    
+                    for frame_elem in animation_elem.findall('frame'):
+                        frame_id = int(frame_elem.get('tileid', 0))
+                        duration = int(frame_elem.get('duration', 100))
+                        
+                        # Calculate frame position in spritesheet
+                        frame_x = (frame_id % columns) * tilewidth
+                        frame_y = (frame_id // columns) * tileheight
+                        
+                        # Cut frame from spritesheet
+                        frame_image = pygame.Surface((tilewidth, tileheight), pygame.SRCALPHA)
+                        frame_image.blit(spritesheet, (0, 0), pygame.Rect(frame_x, frame_y, tilewidth, tileheight))
+                        
+                        # Add frame to animation
+                        animation_frames.append((frame_image, duration))
+                    
+                    # Save animation
+                    if animation_frames:
+                        animations[animation_name] = animation_frames
+                        
+        
+    except Exception as e:
+        import traceback
+        print(f"Error in load_animations_from_tileset: {e}")
+        traceback.print_exc()
+    
+    print(f"Loaded {len(animations)} animations from {tileset_path}")
     return animations
 
 # Pawn Constructor
