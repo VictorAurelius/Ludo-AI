@@ -63,13 +63,15 @@ roll_button = pygame.Rect(735, 290, 180, 50)
 title_button = pygame.Rect(745, 10, 160, 40)
 title_ranking_button = pygame.Rect(400, 400, 200, 50)
 
-# Các biến toàn cục
+# Global declarations
+global roll_button_enabled, showing_dialog, showing_ranking, yes_button, no_button
+
+# Game state variables
+showing_dialog = False
+showing_ranking = False  # Biến kiểm tra đang hiện dialog
 roll_button_enabled = True  # Trạng thái nút tung xúc xắc
 can_move = False  # Biến kiểm tra có thể di chuyển không
 dice_animating = False  # Biến kiểm tra xúc xắc đang animating
-# Reset for new game
-showing_dialog = False
-showing_ranking = False  # Biến kiểm tra đang hiện dialog
 yes_button = pygame.Rect(410, 260, 60, 30)  # Nút "Có"
 no_button = pygame.Rect(530, 260, 90, 30)  # Nút "Không"
 current_dice1 = dice_images[0]  # Mặt xúc xắc 1
@@ -84,7 +86,7 @@ star_effect_time = 0
 alert_time = 0
 
 # Thêm biến toàn cục để xử lý doubles và roll_again
-DOUBLES_DELAY = 500  # Thời gian chờ (ms) khi tung được xúc xắc đôi
+DOUBLES_DELAY = 1500  # Thời gian chờ (ms) khi tung được xúc xắc đôi
 last_doubles_time = 0  # Thời điểm tung được xúc xắc đôi
 doubles_waiting = False  # Đang trong trạng thái chờ sau khi tung được đôi
 got_roll_again_ai = False  # AI nhận được hiệu ứng roll_again
@@ -689,7 +691,7 @@ def draw_ranking(win):
     
     # Render text
     global title_ranking_button
-    title_text = vn_font.render("Tiêu đề", True, BLACK)
+    title_text = vn_font.render("Tiêu đề", False, BLACK)
     text_width = title_text.get_width()
     text_height = title_text.get_height()
     
@@ -854,11 +856,13 @@ def main(player_names=None):
     # Khởi tạo lại Pygame display (quan trọng)
     pygame.display.set_mode((925, 725))
     # Declare globals at the start of function
-    global current_dice1, current_dice2, roll_button_enabled, dice_num1, dice_num2, can_move, showing_dialog, dice_animating, display_player, finished_players
-    finished_players = []
+    global current_dice1, current_dice2, roll_button_enabled, dice_num1, dice_num2, can_move
+    global showing_dialog, showing_ranking, dice_animating, display_player, finished_players
     
-    # Reset dialog state
+    # Reset states
+    finished_players = []
     showing_dialog = False
+    showing_ranking = False
     
     # main Objects
     #Initialize statekeeper object
@@ -992,8 +996,8 @@ def main(player_names=None):
             if current_time - last_doubles_time >= DOUBLES_DELAY:
                 # Đã đợi đủ thời gian, kích hoạt lại nút tung xúc xắc cho AI
                 doubles_waiting = False
-                roll_button_enabled = True
-                last_ai_move_time = current_time  # Đặt thời gian để tránh roll ngay lập tức
+                
+               
 
         # Initialize both dice with value 1 at start
         if not dice_animating and current_dice1 is None:
@@ -1003,6 +1007,17 @@ def main(player_names=None):
         # Kiểm tra nếu có quân cờ đang animation
         any_pawn_animating = False
         for player in Statekpr.players:
+            player.update_self()
+            if player.pawns_home == 4 and player not in finished_players:
+                finished_players.append(player)
+                message = f"{player.name} đã hoàn thành trò chơi!"
+                alert_manager.add_alert(message, 5000)
+                print(message)
+                if len(finished_players) == len(Statekpr.players):
+                    # Game has ended, disable roll button and show ranking
+                    roll_button_enabled = False
+                    showing_ranking = True
+                    print("Hiển thị bảng xếp hạng - tất cả người chơi đã hoàn thành")
             for pawn in player.pawnlist:
                 # Cập nhật animation
                 pawn.update_animation()
@@ -1105,7 +1120,18 @@ def main(player_names=None):
                                         # Kiểm tra nếu người chơi vừa về đích hết và chưa có trong danh sách
                                         if player.pawns_home == 4 and player not in finished_players:
                                             finished_players.append(player)
-                                            alert_manager.add_alert(f"Người chơi {player.name} đã hoàn thành!", 3000)
+                                            message = f"{player.name} đã hoàn thành trò chơi!"
+                                            alert_manager.add_alert(message, 5000)
+                                            print(message)
+                                            
+                                            # Hiển thị bảng xếp hạng nếu tất cả người chơi đã hoàn thành
+                                            if len(finished_players) == len(Statekpr.players):
+                                                showing_ranking = True
+                                                roll_button_enabled = False
+                                                print("Hiển thị bảng xếp hạng - tất cả người chơi đã hoàn thành")
+                                                for player in Statekpr.players:
+                                                    player.turn = False
+                                                    player.active = False
                                     break
                             
                         star_checked = True
@@ -1118,7 +1144,7 @@ def main(player_names=None):
                             
                         if not teleported:
                             teleport_chain_active = False
-                                    
+                        roll_button_enabled = True  # Kích hoạt lại nút tung xúc xắc
                         # Enable lại nút tung xúc xắc và chuyển lượt nếu không có hiệu ứng đặc biệt
                         if not got_roll_again and not teleported:
                             roll_button_enabled = True
@@ -1149,8 +1175,8 @@ def main(player_names=None):
                         # Xóa trạng thái just_moved_out nếu có và đã hoàn thành mọi kiểm tra
                         if hasattr(pawn, 'just_moved_out'):
                             delattr(pawn, 'just_moved_out')
-    
-        # Cập nhật danh sách thông báo
+
+        
         alert_manager.update()
         
         # Update dice animation
@@ -1190,46 +1216,45 @@ def main(player_names=None):
                         print(f"AI {current_player.name} đang thực hiện nước đi")
                         try:
                             # Thực hiện lượt của AI
-                            move_success = current_player.Turn()
+                            move_success,got_roll_again = current_player.Turn()
                             pygame.time.delay(100)
-                            got_roll_again = False
+                            
                             doubles = dice_num1 == dice_num2
                             can_move = move_success
                             any_pawn_animating = False
                             # THÊM DÒNG DEBUG NÀY
                             print(f"AI {current_player.name} - doubles: {doubles}, move_success: {move_success}")
         
-                            # Xử lý trường hợp roll được doubles
-                            
-                            # Xử lý trường hợp roll được doubles
-                            if doubles and move_success:
-                                print(f"AI {current_player.name} tung được xúc xắc đôi, được đi tiếp")
-                                alert_manager.add_alert(f"{current_player.name} tung được xúc xắc đôi, được đi tiếp!", 2000)
+                            # Sửa phần xử lý AI rolls doubles
+                            if (doubles or got_roll_again) and move_success:
+                                message = "tung được xúc xắc đôi" if doubles else "nhận hiệu ứng roll thêm lần"
+                                print(f"AI {current_player.name} {message}, được đi tiếp")
+                                alert_manager.add_alert(f"{current_player.name} {message}, được đi tiếp!", 2000)
                                 
-                                # Đánh dấu trạng thái chờ đợi sau khi tung được doubles
+                                # Đánh dấu trạng thái chờ đợi sau khi tung được doubles hoặc roll_again
                                 doubles_waiting = True
                                 last_doubles_time = pygame.time.get_ticks()
                                 
-                                # Kích hoạt lại nút tung xúc xắc để AI tung tiếp sau khi đợi
-                                roll_button_enabled = False  # Tạm thời vô hiệu hóa để chờ đợi
-                            else:
-                                # Không phải doubles hoặc không di chuyển được, chuyển lượt
-                                print(f"AI {current_player.name} kết thúc lượt")
-            
-                                # Thiết lập các biến trạng thái trước khi chuyển lượt
-                                roll_button_enabled = True
-                                dice_animating = False
+                                # QUAN TRỌNG: KHÔNG đặt roll_button_enabled = False ở đây
+                                # roll_button_enabled = False
                                 
-                                # Gọi các phương thức chuyển lượt trong khối try-except riêng
+                                # Thay vào đó, đặt lại biến và giữ lượt cho AI hiện tại
+                                roll_button_enabled = True  # Cho phép AI tiếp tục tung xúc xắc
+                                # KHÔNG gọi Statekpr.find_next_valid_player() để giữ lượt cho AI
+                            else:
+                                # Không phải doubles/roll_again hoặc không di chuyển được, chuyển lượt
+                                print(f"AI {current_player.name} kết thúc lượt")
+                                roll_button_enabled = True
                                 Statekpr.find_next_valid_player()
                                 Statekpr.update_display_player()
-                                last_turn_change_time = pygame.time.get_ticks()  # Cập nhật thời điểm chuyển lượt
+                                last_turn_change_time = pygame.time.get_ticks()
                         except Exception as e:
                             print(f"Lỗi khi xử lý lượt AI: {e}")
                             # Đảm bảo chuyển lượt kể cả khi có lỗi
                             Statekpr.find_next_valid_player()
                             Statekpr.update_display_player()
                             roll_button_enabled = True
+                            last_turn_change_time = pygame.time.get_ticks()
 
                         dice_sum = dice_num1 + dice_num2 
                         # Quan trọng: return ở đây để tránh xử lý thêm
@@ -1243,11 +1268,20 @@ def main(player_names=None):
                     
                     # Kích hoạt quân có thể di chuyển
                     for pawn in current_player.pawnlist:
-                        # Kích hoạt quân trong chuồng nếu tổng >= 10
-                        if pawn.counter == 0 and dice_sum >= 10:
-                            # Kiểm tra xem vị trí xuất phát đã có quân cùng màu không
-                            position_blocked = False
-                            start_position = pawn.dict[1]
+                        # Skip pawns that have already reached finish
+                        if hasattr(pawn, 'has_reached_finish') and pawn.has_reached_finish:
+                            pawn.clickable = False
+                            continue
+
+                        # Kích hoạt quân trong chuồng CHỈ khi tổng >= 10
+                        if pawn.counter == 0:
+                            # Chỉ cho phép di chuyển nếu tổng >= 10
+                            if dice_sum >= 10:
+                                # Kiểm tra xem vị trí xuất phát đã có quân cùng màu không
+                                position_blocked = False
+                                start_position = pawn.dict[1]
+                            else:
+                                position_blocked = True
                             for other_pawn in current_player.pawnlist:
                                 if other_pawn != pawn and other_pawn.rect.center == start_position:
                                     position_blocked = True
@@ -1344,7 +1378,8 @@ def main(player_names=None):
                     #Kiểm tra click vào nút Tiêu đề trong bảng xếp hạng
                     if title_ranking_button.collidepoint(mouse_pos):
                         mainLoop = False
-                        return None
+                        finished_players.clear()  # Clear finished players list
+                        return "restart"  # Signal to restart game
                 # Xử lý dialog nếu đang hiển thị
                 if showing_dialog:
                     if yes_button.collidepoint(mouse_pos):
@@ -1451,6 +1486,18 @@ def main(player_names=None):
                                 if pawn.counter == 0 and dice_num1 + dice_num2 >= 10:
                                     pawn.counter = 1  # Đặt counter là 1 (vị trí xuất phát)
                                     new_pos = pawn.dict[1]  # Đặt quân ở vị trí xuất phát
+                                    for other_player in Statekpr.players:
+                                        if other_player != current_player:  # Chỉ kiểm tra với quân của người chơi khác
+                                            for other_pawn in other_player.pawnlist:
+                                                if (other_pawn.rect.center == new_pos and 
+                                                    other_pawn.counter > 0 and 
+                                                    not other_pawn.is_dying):
+                                                    print(f"Quân của {current_player.name} ăn quân của {other_player.name} khi xuất quân")
+                                                    other_pawn.start_death_animation()
+                                                    other_player.pawns -= 1
+                                                    other_player.times_kicked += 1
+                                                    alert_manager.add_alert(f"{current_player.name} ăn quân của {other_player.name}!", 2000)
+                                                    break
                                     pawn.start_teleport(new_pos)  # Đặt quân ở vị trí xuất phát
                                     current_player.pawns += 1  # Tăng số quân trên bàn
                                     valid_move = True

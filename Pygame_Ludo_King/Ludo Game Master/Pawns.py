@@ -283,19 +283,38 @@ class Pawn(pygame.sprite.Sprite):
         StateKpr = statekeeper
         # add the dice roll value to the pawn's counter
         old_counter = self.counter
+        old_counter = self.counter
         self.counter += dice
+
+        # Prevent moving if already finished
+        if hasattr(self, 'has_reached_finish') and self.has_reached_finish:
+            self.counter = old_counter
+            return
+
+        # If pawn reaches finish position
         if self.counter == 96 or self.counter == 97:
             print('PawnKing')
             self.kingPawn += 1
+            
+            # Find the player owning this pawn
+            for player in StateKpr.players:
+                if self in player.pawnlist:
+                    # Only increment if this pawn hasn't been counted before
+                    if not hasattr(self, 'has_reached_finish') or not self.has_reached_finish:
+                        player.temp_pawns_home += 1  # Update temp counter
+                        self.has_reached_finish = True
+                    break
             
             # Xác định màu của quân cờ để lấy vị trí đích tương ứng
             player_color = None
             for player in StateKpr.players:
                 if self in player.pawnlist:
                     player_color = player.color
-                    # Tăng số quân về đích của player, nhưng chỉ tăng một lần
-                    if not self.has_reached_finish:
+                    # Chỉ tăng số quân về đích và đánh dấu đã về đích nếu chưa được đánh dấu
+                    if not hasattr(self, 'has_reached_finish') or not self.has_reached_finish:
                         player.pawns_home += 1
+                        self.has_reached_finish = True
+                        print(f"{player.name} now has {player.pawns_home} pawns home")
                     break
             
             # Lấy vị trí đích dựa vào số thứ tự và màu của quân

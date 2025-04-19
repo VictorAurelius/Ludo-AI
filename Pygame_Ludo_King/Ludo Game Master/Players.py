@@ -7,33 +7,30 @@ class Player():
     def __init__(self, name, color, pawns):
         self.name = name
         self.color = color
-        # Track how many times pawns have been kicked by opponents
         self.times_kicked = 0
-        # the list of pawns that belong to this player
         self.pawnlist = pawns
-        # for tracking how many pawns are currently in play
         self.pawns = 0
-        # Store the last two dice rolls
         self.dice1 = 0
         self.dice2 = 0
-        # for tracking how many pawns reached home
         self.pawns_home = 0
-        # self.active represents whether the player is on the board or not
+        self.temp_pawns_home = 0
+        
+        # Reset temp counter by counting actual finished pawns
+        for pawn in pawns:
+            if hasattr(pawn, 'has_reached_finish') and pawn.has_reached_finish:
+                self.temp_pawns_home += 1
+        
         self.active = False
-        # self.turn represents whether it is the player's turn
         self.turn = False
-        #set player objects Boolean variables
         self.Player1 = False
         self.Player2 = False
         self.Player3 = False
         self.Player4 = False
-        # AI status
         self.is_ai = "[AI]" in str(name)
         self.ai_engine = None
         if self.is_ai:
             from ai_engine import LudoAI
-            self.ai_engine = LudoAI(None)  # Will be set later
-        #set player number based on name upon object initialization
+            self.ai_engine = LudoAI(None)
         self.set_player_number()
     
     #this may be more useful later for naming and referencing purposes
@@ -83,7 +80,32 @@ class Player():
         elif self.Player4:
             self.active = self.Statekpr.greenActive
             self.turn = self.Statekpr.greenTurn      
+        
+        # Count finished pawns more accurately
+        pawns_finished = 0
+        for pawn in self.pawnlist:
+            if hasattr(pawn, 'has_reached_finish') and pawn.has_reached_finish:
+                pawns_finished += 1
+        
+        # Only update if count has changed
+        if pawns_finished != self.temp_pawns_home:
+            # Print the change
+            old_count = self.temp_pawns_home
+            self.temp_pawns_home = pawns_finished
+            print(f"{self.name} now has {pawns_finished} pawns home")
             
+            # Update official count and check completion
+            self.pawns_home = pawns_finished
+            
+            from main import finished_players
+            if pawns_finished == 4 and self not in finished_players:
+                finished_players.append(self)
+                print(f"Người chơi {self.name} đã hoàn thành trò chơi với {pawns_finished} quân về đích!")
+                self.turn = False
+                self.active = False
+            elif pawns_finished < 4 and self in finished_players:
+                finished_players.remove(self)
+                
     # ensure the statekeeper is updated with the latest attribute statuses        
     def update_statekeeper(self):        
         if self.Player1:
@@ -141,18 +163,30 @@ class Player():
             # If pawn is provided, try to move that specific pawn
             if pawn is not None:
                 if pawn.counter == 0:
+                    # Khởi tạo start_position trước khi kiểm tra
+                    start_position = pawn.dict[1]
                     # Kiểm tra vị trí xuất phát có bị chặn không
-                    start_pos = pawn.dict[1]
                     blocked = False
                     for other_pawn in self.pawnlist:
-                        if other_pawn != pawn and other_pawn.rect.center == start_pos:
+                        if other_pawn != pawn and other_pawn.rect.center == start_position:
                             blocked = True
                             break
                     
                     if not blocked:
                         # Xuất quân
                         pawn.counter = 1  # Đặt counter là 1 (vị trí xuất phát)
-                        pawn.start_teleport(start_pos)  # Dịch chuyển quân đến vị trí xuất phát
+                        for other_player in self.Statekpr.players:
+                            if other_player != self:  # Chỉ kiểm tra với quân của người chơi khác
+                                for other_pawn in other_player.pawnlist:
+                                    if (other_pawn.rect.center == start_position and 
+                                        other_pawn.counter > 0 and 
+                                        not hasattr(other_pawn, 'is_dying')):
+                                        print(f"Quân của {self.name} ăn quân của {other_player.name} khi xuất quân")
+                                        other_pawn.start_death_animation()
+                                        other_player.pawns -= 1
+                                        other_player.times_kicked += 1
+                                        break
+                        pawn.start_teleport(start_position)  # Dịch chuyển quân đến vị trí xuất phát
                         self.pawns += 1  # Tăng số quân trên bàn
                         pawn.just_moved_out = True  # Đánh dấu quân vừa xuất ra
                         if self.is_ai:
@@ -163,18 +197,19 @@ class Player():
             # If no pawn is provided, find first available pawn
             for pawn in self.pawnlist:
                 if pawn.counter == 0:
+                    # Khởi tạo start_position trước khi kiểm tra
+                    start_position = pawn.dict[1]
                     # Kiểm tra vị trí xuất phát có bị chặn không
-                    start_pos = pawn.dict[1]
                     blocked = False
                     for other_pawn in self.pawnlist:
-                        if other_pawn != pawn and other_pawn.rect.center == start_pos:
+                        if other_pawn != pawn and other_pawn.rect.center == start_position:
                             blocked = True
                             break
                     
                     if not blocked:
                         # Xuất quân
                         pawn.counter = 1  # Đặt counter là 1 (vị trí xuất phát)
-                        pawn.start_teleport(start_pos)  # Dịch chuyển quân đến vị trí xuất phát
+                        pawn.start_teleport(start_position)  # Dịch chuyển quân đến vị trí xuất phát
                         self.pawns += 1  # Tăng số quân trên bàn
                         pawn.just_moved_out = True  # Đánh dấu quân vừa xuất ra
                         if self.is_ai:
@@ -206,7 +241,7 @@ class Player():
             # Sử dụng AI engine để quyết định nước đi tốt nhất
             best_move = self.ai_engine.get_best_move(self, dice_sum)
             move_made = False
-            
+            got_roll_again = False
             if best_move:
                 try:
                     move_type = best_move[0]
@@ -233,7 +268,14 @@ class Player():
                             print(f"{self.name} di chuyển đến ô sao tại vị trí {target_pos}")
                         else:
                             print(f"{self.name} di chuyển quân từ {old_pos} đến {target_pos}")
-                            
+                    if move_made and hasattr(pawn, 'on_star') and pawn.on_star:
+                        star_pos = pawn.counter
+                        # Kiểm tra hiệu ứng của ô sao tại vị trí này
+                        # Giả sử stars là đối tượng toàn cục hoặc được truyền vào
+                        from Stars import stars  # Import ở đầu file hoặc truyền vào phương thức
+                        if star_pos in stars and stars[star_pos].get('effect') == 'roll_again':
+                            got_roll_again = True
+                            print(f"{self.name} đạt hiệu ứng roll_again từ ô sao!")
                 except Exception as e:
                     print(f"Lỗi khi thực hiện nước đi: {e}")
                     self._restore_game_state(old_state)
@@ -249,7 +291,7 @@ class Player():
             
             # QUAN TRỌNG: Đảm bảo luợt được gán chính xác cho người chơi tiếp theo
             # Không thay đổi gì ở đây, để main.py xử lý
-            return move_made
+            return move_made,got_roll_again
         else:
             # Human player turn is handled by main.py
             print(f"{self.name} đang thực hiện lượt")
@@ -285,9 +327,9 @@ class Player():
             if dice_sum < 10:
                 return False
             # Check if starting position is blocked by own pawn
-            start_pos = pawn.dict[1]
+            start_pos = pawn.dict[1]  # Sửa thành start_pos
             for other_pawn in self.pawnlist:
-                if other_pawn != pawn and other_pawn.rect.center == start_pos:
+                if other_pawn != pawn and other_pawn.rect.center == start_pos:  # Sửa thành start_pos
                     return False
             return True
 
@@ -313,15 +355,15 @@ class Player():
                 valid_pawns.append(pawn)
         return valid_pawns
 
-    def move_out_onto_the_board(self, pawn):
-        """Move a pawn from start onto the board"""
-        if pawn in self.pawnlist and pawn.counter == 0:
-            pawn.counter = 1
-            pawn.rect.center = pawn.dict[1]
-            pawn.activepawn = True
-            self.pawns += 1
-            return True
-        return False
+    # def move_out_onto_the_board(self, pawn):
+    #     """Move a pawn from start onto the board"""
+    #     if pawn in self.pawnlist and pawn.counter == 0:
+    #         pawn.counter = 1
+    #         pawn.rect.center = pawn.dict[1]
+    #         pawn.activepawn = True
+    #         self.pawns += 1
+    #         return True
+    #     return False
 
     def move_pawn(self, pawn):
         """Move a pawn by the current dice roll"""
@@ -329,6 +371,16 @@ class Player():
             return False
             
         dice_roll = self.dice1 + self.dice2 if self.dice2 > 0 else self.dice1
+        if pawn.counter == 0:  # Quân ở chuồng, chỉ di chuyển khi tổng >= 10
+            if dice_roll >= 10:
+                # Tạo biến start_pos trước khi sử dụng
+                start_pos = pawn.dict[1]
+                # Kiểm tra vị trí xuất phát có bị chặn không
+                for other_pawn in self.pawnlist:
+                    if other_pawn != pawn and other_pawn.rect.center == start_pos:
+                        return False
+                return self.move_out_onto_the_board(pawn)
+            return False
         new_pos = pawn.counter + dice_roll
         
         if new_pos > 97:  # Invalid move
@@ -339,7 +391,9 @@ class Player():
         for other_pawn in self.pawnlist:
             if other_pawn != pawn and other_pawn.rect.center == target_pos:
                 return False
-                
+        pawn.activepawn = True  # Kích hoạt quân này
+        print(f"AI {self.name} di chuyển quân từ {pawn.counter} đến {new_pos}")
+        old_pos = pawn.counter
         # Move is valid, update pawn position
         pawn.counter = new_pos
         pawn.rect.center = target_pos
@@ -347,32 +401,47 @@ class Player():
         # Clear just_moved_out flag if it exists
         if hasattr(pawn, 'just_moved_out'):
             pawn.just_moved_out = False
-        
+        pawn.on_star = False  # Reset trạng thái sao
+        if new_pos in stars:
+            star = stars[new_pos]
+            print(f"Quân đã đi vào ô sao tại vị trí {new_pos}")
+            pawn.on_star = True
         # Check if pawn reached home
         if new_pos == 97:
             pawn.king = True
             pawn.activepawn = False
             self.pawns -= 1
+            self.pawns_home += 1  
             
         return True
 
     def handle_ai_turn(self):
         """Handle AI player turn"""
         if not self.is_ai or not self.ai_engine:
-            return False
+            return False,False
             
         # Get total dice roll
         dice_roll = self.dice1 + self.dice2 if self.dice2 > 0 else self.dice1
-        
+        print(f"=== Thông tin quân cờ của {self.name} ===")
+        for i, pawn in enumerate(self.pawnlist):
+            print(f"Quân {i+1}: counter={pawn.counter}, active={pawn.activepawn}, pos={pawn.rect.center}")
+        print(f"Tổng số quân trên bàn: {self.pawns}")
+    
         # Get best move from AI
         best_move = self.ai_engine.get_best_move(self, dice_roll)
         
         if best_move:
             move_type, pawn = best_move
             if move_type == "move_out":
-                return self.move_out_onto_board(pawn)
+                success = self.move_out_onto_the_board(pawn)
+                # Kiểm tra hiệu ứng roll_again
+                got_roll_again = success and hasattr(pawn, 'on_star') and pawn.on_star
+                return success, got_roll_again
             else:
-                return self.move_pawn(pawn)
+                success = self.move_pawn(pawn)
+                # Kiểm tra hiệu ứng roll_again
+                got_roll_again = success and hasattr(pawn, 'on_star') and pawn.on_star
+                return success, got_roll_again
                 
         return False
 
