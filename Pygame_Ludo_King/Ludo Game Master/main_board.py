@@ -2,6 +2,19 @@ import pygame
 import sys
 from pytmx.util_pygame import load_pygame  # Thêm import pytmx
 
+import os
+
+def resource_path(relative_path):
+    """Xác định đường dẫn tài nguyên cho cả development và PyInstaller"""
+    if hasattr(sys, '_MEIPASS'):
+        # Khi chạy từ file .exe (tạo bởi PyInstaller)
+        base_path = sys._MEIPASS
+    else:
+        # Khi chạy bình thường từ code
+        base_path = os.path.abspath(".")
+    
+    return os.path.join(base_path, relative_path)
+
 class MainBoard:
     def __init__(self):
         pygame.init()
@@ -40,17 +53,17 @@ class MainBoard:
         self.input_boxes = []  # Danh sách các hộp nhập liệu
 
         # Tải bản đồ từ file .tmx
-        self.map_data = load_pygame("assets_ver1/main_menu.tmx")  # Đường dẫn tới file .tmx
+        self.map_data = load_pygame(resource_path("assets_ver1/main_menu.tmx"))  # Đường dẫn tới file .tmx
         self.map_layer = pygame.Surface((self.map_data.width * self.map_data.tilewidth,
                                          self.map_data.height * self.map_data.tileheight))
 
         # Tải bản đồ cho rules
-        self.rules_map_data = load_pygame("assets_ver1/sp_menu.tmx")
+        self.rules_map_data = load_pygame(resource_path("assets_ver1/sp_menu.tmx"))
         self.rules_map_layer = pygame.Surface((self.rules_map_data.width * self.rules_map_data.tilewidth,
                                             self.rules_map_data.height * self.rules_map_data.tileheight))
 
         # Tải bản đồ cho start menu
-        self.start_map_data = load_pygame("assets_ver1/start_menu.tmx")
+        self.start_map_data = load_pygame(resource_path("assets_ver1/start_menu.tmx"))
         self.start_map_layer = pygame.Surface((self.start_map_data.width * self.start_map_data.tilewidth,
                                         self.start_map_data.height * self.start_map_data.tileheight))
 

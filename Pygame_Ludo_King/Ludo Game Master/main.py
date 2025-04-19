@@ -9,6 +9,18 @@ import os
 from main_board import MainBoard
 from pytmx.util_pygame import load_pygame
 from alert_manager import AlertManager
+import sys
+
+def resource_path(relative_path):
+    """Xác định đường dẫn tài nguyên cho cả development và PyInstaller"""
+    if hasattr(sys, '_MEIPASS'):
+        # Khi chạy từ file .exe (tạo bởi PyInstaller)
+        base_path = sys._MEIPASS
+    else:
+        # Khi chạy bình thường từ code
+        base_path = os.path.abspath(".")
+    
+    return os.path.join(base_path, relative_path)
 # Pygame Initialized
 pygame.init()
 
@@ -95,7 +107,7 @@ def load_dialog():
     
     try:
         # Load map từ file TMX
-        dialog_map = load_pygame('mapfinal/slide_bar.tmx')
+        dialog_map = load_pygame(resource_path('mapfinal/slide_bar.tmx'))
         
         # Vẽ từng layer của map lên surface
         for layer in dialog_map.visible_layers:
@@ -116,7 +128,7 @@ def load_ranking():
     """Tải background cho bảng xếp hạng từ file TMX"""
     try:
         # Load map từ file TMX
-        ranking_map = load_pygame('mapfinal/ranking.tmx')
+        ranking_map = load_pygame(resource_path('mapfinal/ranking.tmx'))
         
         # Lấy kích thước từ file TMX (số ô * kích thước mỗi ô)
         width = ranking_map.width * ranking_map.tilewidth
@@ -150,7 +162,7 @@ def load_sidebar():
     
     try:
         # Load map từ file TMX
-        sidebar_map = load_pygame('mapfinal/slide_bar.tmx')
+        sidebar_map = load_pygame(resource_path('mapfinal/slide_bar.tmx'))
         
         # Vẽ từng layer của map lên surface
         for layer in sidebar_map.visible_layers:
@@ -174,7 +186,7 @@ def load_map():
     map_surface = pygame.Surface((725, 725))
     
     # Load map từ file TMX 
-    game_map = load_pygame('mapfinal/mapludo.tmx')
+    game_map = load_pygame(resource_path('mapfinal/mapludo.tmx'))
     
     # Vẽ từng layer của map lên surface mới
     for layer in game_map.visible_layers:
@@ -203,7 +215,7 @@ def load_quit_dialog():
     """Tải background cho dialog từ file quit_game.tmx"""
     try:
         # Load map từ file TMX
-        quit_map = load_pygame('mapfinal/quit_game.tmx')
+        quit_map = load_pygame(resource_path('mapfinal/quit_game.tmx'))
         
         # Lấy kích thước từ file TMX (số ô * kích thước mỗi ô)
         width = quit_map.width * quit_map.tilewidth
