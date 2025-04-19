@@ -5,7 +5,17 @@ import time
 import os
 import pytmx
 from pytmx.util_pygame import load_pygame
+import sys
 
+def resource_path(relative_path):
+    """Lấy đường dẫn đúng cho tài nguyên khi chạy từ file exe hoặc từ script"""
+    try:
+        # PyInstaller tạo một thư mục tạm và lưu đường dẫn vào _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+        
+    return os.path.join(base_path, relative_path)
 TILE_SIZE = 25 
 MAP_WIDTH = 29
 MAP_HEIGHT = 29
@@ -701,7 +711,7 @@ redDICT = {
     96: (7, 15),
     97: (7, 15)}
 # PNG
-redpng = pygame.image.load('assets_ver1/assets_nhat/Red/Warrior_Red1.png')
+redpng = pygame.image.load(resource_path('assets_ver1/assets_nhat/Red/Warrior_Red1.png'))
 
 redp1 = Pawn(redpng, scale_dict(redDICT, TILE_SIZE), (- 13 + TILE_SIZE * 5, 4 * TILE_SIZE - 13), 1 )
 redp2 = Pawn(redpng, scale_dict(redDICT, TILE_SIZE), (- 13 + TILE_SIZE * 8, 4 * TILE_SIZE - 13), 2)
@@ -816,7 +826,7 @@ blueDICT = {
     97: (15, 7)}
 
 # PNG
-bluepng = pygame.image.load('assets_ver1/assets_nhat/Blue/Warrior_Blue1.png')
+bluepng = pygame.image.load(resource_path('assets_ver1/assets_nhat/Blue/Warrior_Blue1.png'))
 
 bluep1 = Pawn(bluepng, scale_dict(blueDICT, TILE_SIZE), (- 13 + TILE_SIZE * 22, 4 * TILE_SIZE - 13), 1 )
 bluep2 = Pawn(bluepng, scale_dict(blueDICT, TILE_SIZE), (- 13 + TILE_SIZE * 25, 4 * TILE_SIZE - 13), 2)
@@ -932,7 +942,7 @@ yellowDICT = {
     97: (23, 15)}
 
 # PNG
-yellowpng = pygame.image.load('assets_ver1/assets_nhat/Yellow/Warrior_Yellow1.png')
+yellowpng = pygame.image.load(resource_path('assets_ver1/assets_nhat/Yellow/Warrior_Yellow1.png'))
 
 yellowp1 = Pawn(yellowpng, scale_dict(yellowDICT, TILE_SIZE), (- 13 + TILE_SIZE * 22, 21 * TILE_SIZE - 13), 1 )
 yellowp2 = Pawn(yellowpng, scale_dict(yellowDICT, TILE_SIZE), (- 13 + TILE_SIZE * 25, 21 * TILE_SIZE - 13), 2)
@@ -1048,7 +1058,7 @@ greenDICT = {
     97: (15, 23)}
 
 # PNG
-greenpng = pygame.image.load('assets_ver1/assets_nhat/Purple/Warrior_Purple1.png')
+greenpng = pygame.image.load(resource_path('assets_ver1/assets_nhat/Purple/Warrior_Purple1.png'))
 
 greenp1 = Pawn(greenpng, scale_dict(greenDICT, TILE_SIZE), (- 13 + TILE_SIZE * 5, 21 * TILE_SIZE - 13), 1 )
 greenp2 = Pawn(greenpng, scale_dict(greenDICT, TILE_SIZE), (- 13 + TILE_SIZE * 8, 21 * TILE_SIZE - 13), 2)

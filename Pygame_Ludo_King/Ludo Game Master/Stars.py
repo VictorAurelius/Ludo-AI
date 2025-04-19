@@ -2,11 +2,22 @@ import pygame
 import random
 from pygame.locals import *
 from Pawns import TILE_SIZE
+import os
+import sys
 
+def resource_path(relative_path):
+    """Lấy đường dẫn đúng cho tài nguyên khi chạy từ file exe hoặc từ script"""
+    try:
+        # PyInstaller tạo một thư mục tạm và lưu đường dẫn vào _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+        
+    return os.path.join(base_path, relative_path)
 class Star(pygame.sprite.Sprite):
     def __init__(self, position):
         super(Star, self).__init__()
-        self.surf = pygame.image.load('img/Star.png')
+        self.surf = pygame.image.load(resource_path('img/Star.png'))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect(center=(position[0] * TILE_SIZE - 13, position[1] * TILE_SIZE - 13))
         self.position = position

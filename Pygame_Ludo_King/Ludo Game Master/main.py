@@ -36,12 +36,12 @@ win = pygame.display.set_mode((winX, winY))
 
 # Load dice images
 dice_images = [
-    pygame.image.load('img/1_block.png'),
-    pygame.image.load('img/2_block.png'),
-    pygame.image.load('img/3_block.png'),
-    pygame.image.load('img/4_block.png'),
-    pygame.image.load('img/5_block.png'),
-    pygame.image.load('img/6_block.png')
+    pygame.image.load(resource_path('img/1_block.png')),
+    pygame.image.load(resource_path('img/2_block.png')),
+    pygame.image.load(resource_path('img/3_block.png')),
+    pygame.image.load(resource_path('img/4_block.png')),
+    pygame.image.load(resource_path('img/5_block.png')),
+    pygame.image.load(resource_path('img/6_block.png'))
 ]
 # Colors
 WHITE = (255, 255, 255)
@@ -201,7 +201,7 @@ def load_roll_button():
     """Tải background cho nút roll từ file hình ảnh"""
     try:
         # Tải trực tiếp hình ảnh từ đường dẫn trong TSX
-        button_img = pygame.image.load('assets_ver1/TinySwords/UI/Ribbons/Ribbon_Yellow_3Slides.png')
+        button_img = pygame.image.load(resource_path('assets_ver1/TinySwords/UI/Ribbons/Ribbon_Yellow_3Slides.png'))
         return button_img
     except Exception as e:
         print(f"Error loading roll button image: {e}")
