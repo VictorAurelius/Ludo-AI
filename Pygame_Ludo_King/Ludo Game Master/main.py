@@ -39,7 +39,7 @@ COLORS = {
     'Red': (255, 0, 0),
     'Blue': (0, 0, 255),
     'Yellow': (255, 255, 0),
-    'Green': (0, 255, 0)
+    'Green': (128, 0, 128)
 }
 
 # Font
@@ -332,21 +332,7 @@ def draw_sidebar(win, Statekpr):
     # Căn giữa text trong button
     text_x = title_button.centerx - text_rect.width // 2
     text_y = title_button.centery - text_rect.height // 2
-    win.blit(title_text, (text_x, text_y))
-    
-    # # Hiển thị người chơi đang đến lượt
-    # text = vn_font.render(u"Lượt của:", True, BLACK)
-    # win.blit(text, (735, 60))
-    
-    # # Nếu display_player chưa được khởi tạo, khởi tạo ban đầu dựa trên lượt
-    # if Statekpr.display_player is None:
-    #     Statekpr.update_display_player()
-            
-    # # Hiển thị tên người chơi hiện tại
-    # color = COLORS[Statekpr.display_player.color]
-    # text = vn_font.render(Statekpr.display_player.name, True, color)
-    # win.blit(text, (735, 90))
-    
+    win.blit(title_text, (text_x, text_y))    
     
     # Tạo font chữ đậm với font segoe ui
     bold_font = pygame.font.SysFont("segoeui", 20, bold=True)
@@ -413,7 +399,7 @@ def draw_sidebar(win, Statekpr):
     
     # Tính toán vị trí để căn giữa text trong button mới
     text_x = roll_button.centerx - text_rect.width // 2
-    text_y = roll_button.centery - text_rect.height // 2
+    text_y = roll_button.centery - text_rect.height // 2 - 5
     
     # Vẽ text đã được căn giữa
     win.blit(roll_text, (text_x, text_y))
@@ -449,12 +435,19 @@ def draw_sidebar(win, Statekpr):
         # Tạo hình chữ nhật cho khung
         player_frame = pygame.Rect(755, y_pos + 20, 140, 45)
         
-        # Vẽ khung nền
+        # Chỉ vẽ cạnh dưới của khung
         if is_current_player and not dice_animating:
-            # Vẽ viền đậm hơn cho người chơi hiện tại
-            pygame.draw.rect(win, frame_color, player_frame, 6)  # Viền dày 3px
+            # Vẽ đường dưới đậm hơn cho người chơi hiện tại
+            pygame.draw.line(win, frame_color, 
+                            (player_frame.left, player_frame.bottom), 
+                            (player_frame.right, player_frame.bottom), 
+                            6)  # Đường dày 6px
         else:
-            pygame.draw.rect(win, frame_color, player_frame, 1)  # Viền mỏng 1px
+            # Vẽ đường dưới mỏng cho người chơi khác
+            pygame.draw.line(win, frame_color, 
+                            (player_frame.left, player_frame.bottom), 
+                            (player_frame.right, player_frame.bottom), 
+                            1)  # Đường mỏng 1px
         
         # Hiển thị số lần bị đá
         bold_font = pygame.font.SysFont("segoeui", 20, bold=True)
@@ -504,7 +497,7 @@ def draw_sidebar_with_scroll(win, Statekpr):
     
     
     # Tính toán vị trí roll_button có tính đến cuộn
-    bold_font = pygame.font.SysFont("segoeui", 20, bold=True)
+    bold_font = pygame.font.SysFont("segoeui", 18, bold=True)
     if not roll_button_enabled or dice_animating:
         text_color = GRAY
     else:
@@ -553,7 +546,7 @@ def draw_sidebar_with_scroll(win, Statekpr):
     
     # Tính toán vị trí text với cuộn
     text_x = button_x_adjusted + (button_width - text_rect.width) // 2
-    text_y = button_y_adjusted + (button_height - text_rect.height) // 2
+    text_y = button_y_adjusted + (button_height - text_rect.height) // 2 - 5
     win.blit(roll_text, (text_x, text_y))
 
     # Hiển thị xúc xắc với vị trí cuộn
@@ -586,12 +579,19 @@ def draw_sidebar_with_scroll(win, Statekpr):
         # Tạo hình chữ nhật cho khung
         player_frame = pygame.Rect(755 - scroll_x, y_pos - scroll_y + 20, 140, 45)
         
-        # Vẽ khung nền
+        # Chỉ vẽ cạnh dưới của khung
         if is_current_player and not dice_animating:
-            # Vẽ viền đậm hơn cho người chơi hiện tại
-            pygame.draw.rect(win, frame_color, player_frame, 6)  # Viền dày 3px
+            # Vẽ đường dưới đậm hơn cho người chơi hiện tại
+            pygame.draw.line(win, frame_color, 
+                            (player_frame.left, player_frame.bottom), 
+                            (player_frame.right, player_frame.bottom), 
+                            6)  # Đường dày 6px
         else:
-            pygame.draw.rect(win, frame_color, player_frame, 1)  # Viền mỏng 1px
+            # Vẽ đường dưới mỏng cho người chơi khác
+            pygame.draw.line(win, frame_color, 
+                            (player_frame.left, player_frame.bottom), 
+                            (player_frame.right, player_frame.bottom), 
+                            1)  # Đường mỏng 1px
         
         # Hiển thị số lần bị đá
         bold_font = pygame.font.SysFont("segoeui", 20, bold=True)
