@@ -121,23 +121,41 @@ class Statekeep:
               
     # the main method for attempting to move a player if it is their turn by calling the player turn method. Also sets the turn status values
     # this is the method in the main loop that leads to the most change
-    def move_player(self):      
+    def move_player(self):
+        # Get current player based on turn state
+        current_player = None
         if self.redTurn:
-            self.playerRed.Turn()
-            self.redTurn = False
-            self.blueTurn = True            
+            current_player = self.playerRed
         elif self.blueTurn:
-            self.playerBlue.Turn()
-            self.blueTurn = False
-            self.yellowTurn = True            
+            current_player = self.playerBlue
         elif self.yellowTurn:
-            self.playerYellow.Turn()
-            self.yellowTurn = False
-            self.greenTurn = True            
+            current_player = self.playerYellow
         elif self.greenTurn:
-            self.playerGreen.Turn()
+            current_player = self.playerGreen
+            
+        if current_player:
+            # Execute the turn
+            current_player.Turn()
+            
+            # Find next player using the index order
+            current_idx = self.players.index(current_player)
+            next_idx = (current_idx + 1) % 4
+            
+            # Reset all turn flags
+            self.redTurn = False
+            self.blueTurn = False
+            self.yellowTurn = False
             self.greenTurn = False
-            self.redTurn = True
+            
+            # Set the next player's turn
+            if next_idx == 0:
+                self.redTurn = True
+            elif next_idx == 1:
+                self.blueTurn = True
+            elif next_idx == 2:
+                self.yellowTurn = True
+            elif next_idx == 3:
+                self.greenTurn = True
         
     # Thêm phương thức để cập nhật người chơi hiển thị
     def update_display_player(self):
