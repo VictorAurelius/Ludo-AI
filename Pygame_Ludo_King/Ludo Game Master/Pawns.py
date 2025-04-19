@@ -74,7 +74,8 @@ def load_animations_from_tileset(tileset_path):
                 image_path = image_element.get('source')
                 # Chuẩn hóa đường dẫn tới file ảnh
                 base_dir = os.path.dirname(tileset_path)
-                image_path = os.path.normpath(os.path.join(base_dir, image_path))
+                relative_image_path = os.path.normpath(os.path.join(os.path.basename(base_dir), os.path.basename(image_path)))
+                image_path = resource_path(relative_image_path)
                 
                 # Tải spritesheet nếu file tồn tại
                 if os.path.exists(image_path):
@@ -363,178 +364,182 @@ class Pawn(pygame.sprite.Sprite):
             self.current_state = f"walk_{first_direction}"
             
     def update_animation(self):
-        # Xử lý animation chết
-        if self.is_dying:
-            current_time = pygame.time.get_ticks()
-    
-            # Kiểm tra xem đã đến lúc cập nhật frame chưa
-            if current_time - self.last_frame_update > self.frame_delay:
-                # Lấy số frame trong animation chết
-                if "dead" in self.animations and self.animations["dead"]:
-                    num_frames = len(self.animations["dead"])
-                    
-                    # Cập nhật frame index
-                    self.frame_index += 1
-                    
-                    # Kiểm tra kết thúc animation
-                    if self.frame_index >= num_frames:
-                        # Animation chết kết thúc, đưa quân về chuồng
-                        self.is_dying = False
-                        self.rect.center = self.startpos
-                        self.counter = 0
-                        
-                        # Reset về trạng thái đứng yên
-                        self.current_state = "stand_left"
-                        self.frame_index = 0
-                    else:
-                        # Cập nhật surface hiện tại
-                        frame_data = self.animations["dead"][self.frame_index % num_frames]
-                        self.surf = frame_data[0]
-                        
-                        # Đặt lại colorkey và rect
-                        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-                        old_center = self.rect.center
-                        self.rect = self.surf.get_rect(center=old_center)
-                    
-                    # Cập nhật thời gian frame cuối
-                    self.last_frame_update = current_time
-        
-        if self.teleporting:
-            
-            current_time = pygame.time.get_ticks()
-            
-            # Kiểm tra xem đã đến lúc cập nhật frame chưa
-            if current_time - self.last_frame_update > self.frame_delay:
-                # Xác định số frame trong animation hiện tại
-                animation_key = f"teleport_{self.teleport_phase}"
-                
-                if animation_key in self.animations:
-                    num_frames = len(self.animations[animation_key])
-                    
-                    # Cập nhật frame index
-                    self.frame_index += 1
-                    
-                    # Kiểm tra kết thúc animation
-                    if self.frame_index >= num_frames:
-                        # Nếu đang trong phase "starting", chuyển sang phase "end"
-                        if self.teleport_phase == "starting":
-                            # Di chuyển tới vị trí đích
-                            self.rect.center = self.teleport_target
-                            self.teleport_phase = "end"
-                            self.current_state = "teleport_end"
-                            self.frame_index = 0
-                        else:  # Kết thúc teleport
-                            self.teleporting = False
-                            self.teleport_phase = None
-                            # Sử dụng hướng đã lưu từ trước
-                            if hasattr(self, 'teleport_direction'):
-                                self.current_state = f"stand_{self.teleport_direction}"
-                            else:
-                                self.current_state = "stand_left"  # Fallback
-                            self.frame_index = 0
-                            self.just_finished_animation = True  # Đánh dấu đã hoàn thành animation
-                    else:
-                        # Cập nhật surface hiện tại
-                        frame_data = self.animations[animation_key][self.frame_index % num_frames]
-                        self.surf = frame_data[0]
-                        
-                        # Đặt lại colorkey và rect
-                        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-                        old_center = self.rect.center
-                        self.rect = self.surf.get_rect(center=old_center)
-                    
-                    # Cập nhật thời gian frame cuối
-                    self.last_frame_update = current_time
-        # Di chuyển quân cờ theo animation path
-        elif self.is_move:
-            if self.animation_index < len(self.animation_path):
-                # Chỉ cập nhật vị trí mỗi animation_speed frame
+        try:
+            if self.is_dying:
                 current_time = pygame.time.get_ticks()
-                
-                # Thêm biến để theo dõi thời gian cho mỗi quân cờ
-                if not hasattr(self, 'last_animation_time'):
-                    self.last_animation_time = current_time
-                    
-                # Chỉ di chuyển khi đã qua đủ thời gian
-                if current_time - self.last_animation_time > self.animation_speed * 10:  # Nhân với 10 để chuyển đổi thành ms
-                    # Cập nhật hướng di chuyển nếu cần
-                    if self.animation_index < len(self.direction_changes):
-                        direction = self.direction_changes[self.animation_index]
-                        walk_state = f"walk_{direction}"
-                        
-                        # Chỉ cập nhật nếu hướng thay đổi để tránh reset animation
-                        if self.current_state != walk_state:
-                            self.current_state = walk_state
-                            self.frame_index = 0
-                    
-                    self.rect.center = self.animation_path[self.animation_index]
-                    self.animation_index += 1
-                    self.last_animation_time = current_time
-                    
-                # Cập nhật animation walk trong khi di chuyển
-                if self.current_state in self.animations and self.animations[self.current_state]:
-                    # Chỉ cập nhật animation nếu đã qua đủ thời gian frame_delay
-                    if current_time - self.last_frame_update > self.frame_delay:
-                        # Lấy số frame trong animation hiện tại
-                        num_frames = len(self.animations[self.current_state])
+        
+                # Kiểm tra xem đã đến lúc cập nhật frame chưa
+                if current_time - self.last_frame_update > self.frame_delay:
+                    # Lấy số frame trong animation chết
+                    if "dead" in self.animations and self.animations["dead"]:
+                        num_frames = len(self.animations["dead"])
                         
                         # Cập nhật frame index
-                        self.frame_index = (self.frame_index + 1) % num_frames
+                        self.frame_index += 1
                         
-                        # Cập nhật surface hiện tại
-                        frame_data = self.animations[self.current_state][self.frame_index]
-                        original_surf = self.surf  # Lưu surface hiện tại
-                        self.surf = frame_data[0]  # frame_data[0] là surface, frame_data[1] là duration
-                        
-                        # Đặt lại colorkey và rect
-                        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-                        old_center = self.rect.center
-                        self.rect = self.surf.get_rect(center=old_center)
+                        # Kiểm tra kết thúc animation
+                        if self.frame_index >= num_frames:
+                            # Animation chết kết thúc, đưa quân về chuồng
+                            self.is_dying = False
+                            self.rect.center = self.startpos
+                            self.counter = 0
+                            
+                            # Reset về trạng thái đứng yên
+                            self.current_state = "stand_left"
+                            self.frame_index = 0
+                        else:
+                            # Cập nhật surface hiện tại
+                            frame_data = self.animations["dead"][self.frame_index % num_frames]
+                            self.surf = frame_data[0]
+                            
+                            # Đặt lại colorkey và rect
+                            self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+                            old_center = self.rect.center
+                            self.rect = self.surf.get_rect(center=old_center)
                         
                         # Cập nhật thời gian frame cuối
                         self.last_frame_update = current_time
-            else:
-                self.is_move = False
-                # Kiểm tra nếu quân đã về đích và có vị trí đích cuối cùng
-                if self.has_reached_finish and self.finish_position:
-                    # Dùng teleport để di chuyển đến vị trí đích cuối cùng
-                    self.start_teleport(self.finish_position)
-                    # Reset flag để không teleport lại
-                    self.has_reached_finish = False
-                else:
-                    # Xử lý hoàn thành animation bình thường
-                    self.just_finished_animation = True  # Đánh dấu vừa hoàn thành animation
-                    
-                    # Chuyển về trạng thái đứng yên sau khi di chuyển
-                    if hasattr(self, 'direction_changes') and self.direction_changes:
-                        last_direction = self.direction_changes[-1]
-                        self.current_state = f"stand_{last_direction}"
-                    else:
-                        self.current_state = "stand_left"  # Mặc định quay trái
-                    self.frame_index = 0
-        elif not self.is_move and self.current_state in self.animations and self.animations[self.current_state]:
-            current_time = pygame.time.get_ticks()
             
-            # Kiểm tra xem đã đến lúc cập nhật frame chưa
-            if current_time - self.last_frame_update > self.frame_delay:
-                # Lấy số frame trong animation hiện tại
-                num_frames = len(self.animations[self.current_state])
+            if self.teleporting:
                 
-                # Cập nhật frame index
-                self.frame_index = (self.frame_index + 1) % num_frames
+                current_time = pygame.time.get_ticks()
                 
-                # Cập nhật surface hiện tại
-                frame_data = self.animations[self.current_state][self.frame_index]
-                self.surf = frame_data[0]  # frame_data[0] là surface, frame_data[1] là duration
+                # Kiểm tra xem đã đến lúc cập nhật frame chưa
+                if current_time - self.last_frame_update > self.frame_delay:
+                    # Xác định số frame trong animation hiện tại
+                    animation_key = f"teleport_{self.teleport_phase}"
+                    
+                    if animation_key in self.animations:
+                        num_frames = len(self.animations[animation_key])
+                        
+                        # Cập nhật frame index
+                        self.frame_index += 1
+                        
+                        # Kiểm tra kết thúc animation
+                        if self.frame_index >= num_frames:
+                            # Nếu đang trong phase "starting", chuyển sang phase "end"
+                            if self.teleport_phase == "starting":
+                                # Di chuyển tới vị trí đích
+                                self.rect.center = self.teleport_target
+                                self.teleport_phase = "end"
+                                self.current_state = "teleport_end"
+                                self.frame_index = 0
+                            else:  # Kết thúc teleport
+                                self.teleporting = False
+                                self.teleport_phase = None
+                                # Sử dụng hướng đã lưu từ trước
+                                if hasattr(self, 'teleport_direction'):
+                                    self.current_state = f"stand_{self.teleport_direction}"
+                                else:
+                                    self.current_state = "stand_left"  # Fallback
+                                self.frame_index = 0
+                                self.just_finished_animation = True  # Đánh dấu đã hoàn thành animation
+                        else:
+                            # Cập nhật surface hiện tại
+                            frame_data = self.animations[animation_key][self.frame_index % num_frames]
+                            self.surf = frame_data[0]
+                            
+                            # Đặt lại colorkey và rect
+                            self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+                            old_center = self.rect.center
+                            self.rect = self.surf.get_rect(center=old_center)
+                        
+                        # Cập nhật thời gian frame cuối
+                        self.last_frame_update = current_time
+            # Di chuyển quân cờ theo animation path
+            elif self.is_move:
+                if self.animation_index < len(self.animation_path):
+                    # Chỉ cập nhật vị trí mỗi animation_speed frame
+                    current_time = pygame.time.get_ticks()
+                    
+                    # Thêm biến để theo dõi thời gian cho mỗi quân cờ
+                    if not hasattr(self, 'last_animation_time'):
+                        self.last_animation_time = current_time
+                        
+                    # Chỉ di chuyển khi đã qua đủ thời gian
+                    if current_time - self.last_animation_time > self.animation_speed * 10:  # Nhân với 10 để chuyển đổi thành ms
+                        # Cập nhật hướng di chuyển nếu cần
+                        if self.animation_index < len(self.direction_changes):
+                            direction = self.direction_changes[self.animation_index]
+                            walk_state = f"walk_{direction}"
+                            
+                            # Chỉ cập nhật nếu hướng thay đổi để tránh reset animation
+                            if self.current_state != walk_state:
+                                self.current_state = walk_state
+                                self.frame_index = 0
+                        
+                        self.rect.center = self.animation_path[self.animation_index]
+                        self.animation_index += 1
+                        self.last_animation_time = current_time
+                        
+                    # Cập nhật animation walk trong khi di chuyển
+                    if self.current_state in self.animations and self.animations[self.current_state]:
+                        # Chỉ cập nhật animation nếu đã qua đủ thời gian frame_delay
+                        if current_time - self.last_frame_update > self.frame_delay:
+                            # Lấy số frame trong animation hiện tại
+                            num_frames = len(self.animations[self.current_state])
+                            
+                            # Cập nhật frame index
+                            self.frame_index = (self.frame_index + 1) % num_frames
+                            
+                            # Cập nhật surface hiện tại
+                            frame_data = self.animations[self.current_state][self.frame_index]
+                            original_surf = self.surf  # Lưu surface hiện tại
+                            self.surf = frame_data[0]  # frame_data[0] là surface, frame_data[1] là duration
+                            
+                            # Đặt lại colorkey và rect
+                            self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+                            old_center = self.rect.center
+                            self.rect = self.surf.get_rect(center=old_center)
+                            
+                            # Cập nhật thời gian frame cuối
+                            self.last_frame_update = current_time
+                else:
+                    self.is_move = False
+                    # Kiểm tra nếu quân đã về đích và có vị trí đích cuối cùng
+                    if self.has_reached_finish and self.finish_position:
+                        # Dùng teleport để di chuyển đến vị trí đích cuối cùng
+                        self.start_teleport(self.finish_position)
+                        # Reset flag để không teleport lại
+                        self.has_reached_finish = False
+                    else:
+                        # Xử lý hoàn thành animation bình thường
+                        self.just_finished_animation = True  # Đánh dấu vừa hoàn thành animation
+                        
+                        # Chuyển về trạng thái đứng yên sau khi di chuyển
+                        if hasattr(self, 'direction_changes') and self.direction_changes:
+                            last_direction = self.direction_changes[-1]
+                            self.current_state = f"stand_{last_direction}"
+                        else:
+                            self.current_state = "stand_left"  # Mặc định quay trái
+                        self.frame_index = 0
+            elif not self.is_move and self.current_state in self.animations and self.animations[self.current_state]:
+                current_time = pygame.time.get_ticks()
                 
-                # Đặt lại colorkey và rect
-                self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-                old_center = self.rect.center
-                self.rect = self.surf.get_rect(center=old_center)
-                
-                # Cập nhật thời gian frame cuối
-                self.last_frame_update = current_time
-                
+                # Kiểm tra xem đã đến lúc cập nhật frame chưa
+                if current_time - self.last_frame_update > self.frame_delay:
+                    # Lấy số frame trong animation hiện tại
+                    num_frames = len(self.animations[self.current_state])
+                    
+                    # Cập nhật frame index
+                    self.frame_index = (self.frame_index + 1) % num_frames
+                    
+                    # Cập nhật surface hiện tại
+                    frame_data = self.animations[self.current_state][self.frame_index]
+                    self.surf = frame_data[0]  # frame_data[0] là surface, frame_data[1] là duration
+                    
+                    # Đặt lại colorkey và rect
+                    self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+                    old_center = self.rect.center
+                    self.rect = self.surf.get_rect(center=old_center)
+                    
+                    # Cập nhật thời gian frame cuối
+                    self.last_frame_update = current_time
+        except Exception as e:
+            print(f"Animation error: {e}")
+            self.teleporting = False  # Đảm bảo kết thúc animation
+            roll_button_enabled = True  # Reset trạng thái button
+            self.just_finished_animation = True  # Đánh dấu animation đã kết thúc        
     
     def load_animations(self, tileset_path):
         """Tải animations từ file tileset"""
@@ -600,13 +605,12 @@ yellowPawn = pygame.sprite.Group()
 greenPawn = pygame.sprite.Group()
 allSprites = pygame.sprite.Group()
 
-# Đường dẫn đến các file tileset animation
-blue_anim_path = 'mapfinal/WBlue_Animation.tsx'
-red_anim_path = 'mapfinal/WRed_Animation.tsx'  # Giả sử có file này
-yellow_anim_path = 'mapfinal/WYellow_Animation.tsx'  # Giả sử có file này
-green_anim_path = 'mapfinal/WPurple_Animation.tsx'  # Giả sử có file này
-dead_anim_path = 'mapfinal/Dead.tsx'  # Animation chết cho tất cả quân cờ
-
+# Thay thế các đường dẫn cứng cho file animation:
+blue_anim_path = resource_path('mapfinal/WBlue_Animation.tsx')
+red_anim_path = resource_path('mapfinal/WRed_Animation.tsx')
+yellow_anim_path = resource_path('mapfinal/WYellow_Animation.tsx')
+green_anim_path = resource_path('mapfinal/WPurple_Animation.tsx')
+dead_anim_path = resource_path('mapfinal/Dead.tsx')
 # Hàm helper để chuyển đổi dictionary
 def scale_dict(dict_pos, scale):
     return {k: ((v[0] * scale) - 13, (v[1] * scale) - 13) for k, v in dict_pos.items()}
