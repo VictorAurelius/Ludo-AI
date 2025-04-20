@@ -1272,17 +1272,17 @@ def main(player_names=None):
 
                         # Kích hoạt quân trong chuồng CHỈ khi tổng >= 10
                         if pawn.counter == 0:
-                            # Chỉ cho phép di chuyển nếu tổng >= 10
+                            position_blocked = True  # Mặc định là bị chặn
                             if dice_sum >= 10:
                                 # Kiểm tra xem vị trí xuất phát đã có quân cùng màu không
-                                position_blocked = False
                                 start_position = pawn.dict[1]
-                            else:
-                                position_blocked = True
-                            for other_pawn in current_player.pawnlist:
-                                if other_pawn != pawn and other_pawn.rect.center == start_position:
-                                    position_blocked = True
-                                    break
+                                position_blocked = False
+                                
+                                # Di chuyển vòng lặp kiểm tra vào bên trong điều kiện dice_sum >= 10
+                                for other_pawn in current_player.pawnlist:
+                                    if other_pawn != pawn and other_pawn.rect.center == start_position:
+                                        position_blocked = True
+                                        break
                             
                             if not position_blocked:
                                 pawn.activepawn = True
