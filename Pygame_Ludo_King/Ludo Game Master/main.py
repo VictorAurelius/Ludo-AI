@@ -1004,17 +1004,6 @@ def main(player_names=None):
         # Kiểm tra nếu có quân cờ đang animation
         any_pawn_animating = False
         for player in Statekpr.players:
-            player.update_self()
-            if player.pawns_home == 4 and player not in finished_players:
-                finished_players.append(player)
-                message = f"{player.name} đã hoàn thành trò chơi!"
-                alert_manager.add_alert(message, 5000)
-                print(message)
-                if len(finished_players) == len(Statekpr.players):
-                    # Game has ended, disable roll button and show ranking
-                    roll_button_enabled = False
-                    showing_ranking = True
-                    print("Hiển thị bảng xếp hạng - tất cả người chơi đã hoàn thành")
             for pawn in player.pawnlist:
                 # Cập nhật animation
                 pawn.update_animation()
@@ -1122,7 +1111,7 @@ def main(player_names=None):
                                             print(message)
                                             
                                             # Hiển thị bảng xếp hạng nếu tất cả người chơi đã hoàn thành
-                                            if len(finished_players) == len(Statekpr.players):
+                                            if len(finished_players) == len(Statekpr.players) - 1:
                                                 showing_ranking = True
                                                 roll_button_enabled = False
                                                 print("Hiển thị bảng xếp hạng - tất cả người chơi đã hoàn thành")
@@ -1171,7 +1160,35 @@ def main(player_names=None):
                             
                         # Xóa trạng thái just_moved_out nếu có và đã hoàn thành mọi kiểm tra
                         if hasattr(pawn, 'just_moved_out'):
-                            delattr(pawn, 'just_moved_out')
+                            delattr(pawn, 'just_moved_out') 
+                    # Kiểm tra nếu quân đã về đích (counter = 52 hoặc 53) để tăng số quân về đích
+                    if pawn.counter == 96 or pawn.counter == 97:
+                        # Tìm người chơi sở hữu quân này và tăng pawns_home
+                        for player in Statekpr.players:
+                            if pawn in player.pawnlist:
+                                # Kiểm tra nếu người chơi vừa về đích hết và chưa có trong danh sách
+                                if player.pawns_home == 4 and player not in finished_players:
+                                    finished_players.append(player)
+                                    message = f"{player.name} đã hoàn thành trò chơi!"
+                                    alert_manager.add_alert(message, 5000)
+                                    print(message)
+                                    
+                                    # Hiển thị bảng xếp hạng nếu tất cả người chơi đã hoàn thành
+                                    if len(finished_players) == len(Statekpr.players) - 1:
+                                        # Tìm người chơi kế tiếp và thêm vào danh sách
+                                        for remaining_player in Statekpr.players:
+                                            if remaining_player not in finished_players:
+                                                finished_players.append(remaining_player)
+                                                showing_ranking = True
+                                                break
+                                        roll_button_enabled = False
+                                        print("Hiển thị bảng xếp hạng - tất cả người chơi đã hoàn thành")
+                                        for player in Statekpr.players:
+                                            player.turn = False
+                                            player.active = False
+                                break        
+        
+        showing_ranking = len(finished_players) == 4
 
         
         alert_manager.update()

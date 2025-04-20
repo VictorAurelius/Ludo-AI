@@ -15,11 +15,6 @@ class Player():
         self.pawns_home = 0
         self.temp_pawns_home = 0
         
-        # Reset temp counter by counting actual finished pawns
-        for pawn in pawns:
-            if hasattr(pawn, 'has_reached_finish') and pawn.has_reached_finish:
-                self.temp_pawns_home += 1
-        
         self.active = False
         self.turn = False
         self.Player1 = False
@@ -81,30 +76,7 @@ class Player():
             self.active = self.Statekpr.greenActive
             self.turn = self.Statekpr.greenTurn      
         
-        # Count finished pawns more accurately
-        pawns_finished = 0
-        for pawn in self.pawnlist:
-            if hasattr(pawn, 'has_reached_finish') and pawn.has_reached_finish:
-                pawns_finished += 1
         
-        # Only update if count has changed
-        if pawns_finished != self.temp_pawns_home:
-            # Print the change
-            old_count = self.temp_pawns_home
-            self.temp_pawns_home = pawns_finished
-            print(f"{self.name} now has {pawns_finished} pawns home")
-            
-            # Update official count and check completion
-            self.pawns_home = pawns_finished
-            
-            from main import finished_players
-            if pawns_finished == 4 and self not in finished_players:
-                finished_players.append(self)
-                print(f"Người chơi {self.name} đã hoàn thành trò chơi với {pawns_finished} quân về đích!")
-                self.turn = False
-                self.active = False
-            elif pawns_finished < 4 and self in finished_players:
-                finished_players.remove(self)
                 
     # ensure the statekeeper is updated with the latest attribute statuses        
     def update_statekeeper(self):        
