@@ -3,10 +3,13 @@ import random
 import numpy as np
 from Players import Player
 from Pawns import Pawn
-from Stars import Star
+from Stars import star_positions
+
+
 class LudoAI:
     def __init__(self, statekeeper):
         self.statekeeper = statekeeper
+        self.star_positions = star_positions
         self.MAX_DEPTH = 2  # Reduced depth for better performance
         # Trọng số cho các yếu tố đánh giá
         self.weights = {
@@ -31,7 +34,7 @@ class LudoAI:
         Hàm đánh giá trạng thái game sử dụng trọng số
         """
         score = 0
-        star_positions = [5, 18, 31, 44, 57, 70, 83]
+        
         
         # 1. Đánh giá tiến độ và vị trí của quân
         pawns_on_board = 0
@@ -55,7 +58,7 @@ class LudoAI:
                     score += self.weights['near_finish'][2]
                     
                 # Thưởng cho quân ở vị trí sao
-                if pawn.counter in star_positions:
+                if pawn.counter in self.star_positions:
                     score += self.weights['star_position']
                     
                 # Phạt cho vị trí nguy hiểm (13 bước từ đích)
@@ -142,8 +145,8 @@ class LudoAI:
                         
                         # Kiểm tra có đi vào ô sao không
                         # star_positions = [5, 18, 31, 44, 57, 70, 83]
-                        on_star = (pawn.counter + dice_roll) in Star.star_positions
-                        
+                        target_position = pawn.counter + dice_roll
+                        on_star = target_position in self.star_positions
                         # Tạo nước đi với metadata
                         move_data = {
                             "target_position": pawn.counter + dice_roll,
