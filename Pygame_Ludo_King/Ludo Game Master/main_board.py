@@ -32,7 +32,21 @@ class MainBoard:
         self.SCROLL_SPEED = 15
         
         self.sound_manager = SoundManager()
-        # Kích thước của các bản đồ
+        # Phóng to nút âm thanh lên gấp 3 lần
+        original_size = self.sound_manager.music_button_size
+        new_size = (original_size[0] * 3, original_size[1] * 3)
+        
+        # Tải lại hình ảnh nút âm thanh với kích thước mới
+        self.sound_manager.music_button_size = new_size
+        self.sound_manager.music_button_on = pygame.transform.scale(self.sound_manager.music_button_on, new_size)
+        self.sound_manager.music_button_off = pygame.transform.scale(self.sound_manager.music_button_off, new_size)
+        
+        # Cập nhật vị trí để đảm bảo nút không bị lệch khỏi màn hình
+        self.sound_manager.music_button_rect = pygame.Rect(self.sound_manager.music_button_pos, new_size)
+        # Điều chỉnh vị trí nút để phù hợp với kích thước mới
+        self.sound_manager.music_button_pos = (700, 20)  # Điều chỉnh vị trí phù hợp
+        self.sound_manager.music_button_rect = pygame.Rect(self.sound_manager.music_button_pos, new_size)
+            # Kích thước của các bản đồ
         self.map_width = 800
         self.map_height = 800
         
