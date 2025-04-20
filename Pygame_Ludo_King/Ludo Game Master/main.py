@@ -1082,7 +1082,7 @@ def main(player_names=None):
                                         break
 
                         # Tiếp tục xử lý các hiệu ứng khác và chuyển lượt như cũ
-                        if pawn.counter == 96 or pawn.counter == 97:
+                        if pawn.counter == 96 or pawn.counter == 97 and not pawn.king:
                             print('PawnKing')
                             pawn.counter = 0
                             # Tìm người chơi sở hữu quân này

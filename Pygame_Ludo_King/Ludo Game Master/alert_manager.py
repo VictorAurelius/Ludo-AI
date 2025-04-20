@@ -30,12 +30,12 @@ class AlertManager:
             y_position = 50 + i * 60  # Khoảng cách giữa các thông báo
             
             # Tạo surface bán trong suốt cho background
-            alert_bg = pygame.Surface((400, 50))
+            alert_bg = pygame.Surface((600, 50))
             alert_bg.set_alpha(200)
             alert_bg.fill((0, 0, 0))
             
             # Vẽ background ở giữa màn hình
-            x = (screen.get_width() - 400) // 2
+            x = (screen.get_width() - 600) // 2
             screen.blit(alert_bg, (x, y_position))
             
             # Vẽ text
