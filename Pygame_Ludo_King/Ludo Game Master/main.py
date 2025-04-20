@@ -475,7 +475,7 @@ def draw_sidebar(win, Statekpr):
         player_frame = pygame.Rect(755, y_pos + 20, 140, 45)
         
         # Chỉ vẽ cạnh dưới của khung
-        if is_current_player and not dice_animating:
+        if is_current_player:  # Loại bỏ điều kiện not dice_animating
             # Vẽ đường dưới đậm hơn cho người chơi hiện tại
             pygame.draw.line(win, frame_color, 
                             (player_frame.left, player_frame.bottom), 
@@ -619,7 +619,7 @@ def draw_sidebar_with_scroll(win, Statekpr):
         player_frame = pygame.Rect(755 - scroll_x, y_pos - scroll_y + 20, 140, 45)
         
         # Chỉ vẽ cạnh dưới của khung
-        if is_current_player and not dice_animating:
+        if is_current_player:  # Loại bỏ điều kiện not dice_animating
             # Vẽ đường dưới đậm hơn cho người chơi hiện tại
             pygame.draw.line(win, frame_color, 
                             (player_frame.left, player_frame.bottom), 
