@@ -665,7 +665,7 @@ def draw_ranking(win):
     
     # Vẽ tiêu đề - căn giữa theo chiều ngang của bảng xếp hạng
     title_font = pygame.font.SysFont("segoeui", 36, bold=True)
-    title = title_font.render("BẢNG XẾP HẠNG", True, BLACK)
+    title = title_font.render("RANKING", True, BLACK)
     title_x = ranking_x + (ranking_width - title.get_width()) // 2
     win.blit(title, (title_x, ranking_y + 50))
     
@@ -675,7 +675,7 @@ def draw_ranking(win):
     y_pos = ranking_y + 185
     for i, player in enumerate(finished_players, 1):
         color = COLORS[player.color]
-        text = vn_font.render(f"Hạng {i}: {player.name}", True, color)
+        text = vn_font.render(f"NO {i}: {player.name}", True, color)
         text_x = ranking_x + 130
         win.blit(text, (text_x, y_pos))
         y_pos += y_spacing
@@ -691,7 +691,7 @@ def draw_ranking(win):
     
     # Render text
     global title_ranking_button
-    title_text = vn_font.render("Tiêu đề", False, BLACK)
+    title_text = vn_font.render("QUIT", False, BLACK)
     text_width = title_text.get_width()
     text_height = title_text.get_height()
     
@@ -706,9 +706,6 @@ def draw_ranking(win):
         text_width + (button_padding_x * 2),
         text_height + (button_padding_y * 2)
     )
-    
-    # Vẽ viền button
-    pygame.draw.rect(win, BLACK, title_ranking_button, 2)
     
     # Vẽ text
     win.blit(title_text, (text_x, text_y))
