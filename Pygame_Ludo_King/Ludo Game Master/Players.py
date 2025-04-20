@@ -134,7 +134,9 @@ class Player():
         if roll >= 10:
             # If pawn is provided, try to move that specific pawn
             if pawn is not None:
-                if pawn.counter == 0:
+                if (pawn.counter == 0 and 
+                    not (hasattr(pawn, 'king') and pawn.king) and 
+                    not (hasattr(pawn, 'has_reached_finish') and pawn.has_reached_finish)):
                     # Khởi tạo start_position trước khi kiểm tra
                     start_position = pawn.dict[1]
                     # Kiểm tra vị trí xuất phát có bị chặn không
