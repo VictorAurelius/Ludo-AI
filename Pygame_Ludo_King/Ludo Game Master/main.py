@@ -1293,10 +1293,9 @@ def main(player_names=None):
                         # Kích hoạt quân trong chuồng CHỈ khi tổng >= 10
                         if pawn.counter == 0 and not (hasattr(pawn, 'king') and pawn.king) and not (hasattr(pawn, 'has_reached_finish') and pawn.has_reached_finish):
                               # Mặc định là bị chặn
+                            start_position = pawn.dict[1]
                             if dice_sum >= 10:
                                 position_blocked = False
-                                # Kiểm tra xem vị trí xuất phát đã có quân cùng màu không
-                                start_position = pawn.dict[1]
                             else:
                                 position_blocked = True
                                 
