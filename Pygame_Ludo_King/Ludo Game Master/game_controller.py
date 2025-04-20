@@ -8,6 +8,9 @@ import os
 def run_game():
     pygame.init()
     # Lấy thông tin màn hình
+    
+    from sound_manager import SoundManager
+    sound_manager = SoundManager()
     info = pygame.display.Info()
     screen_width = info.current_w
     screen_height = info.current_h
@@ -60,6 +63,7 @@ def run_game():
                     
                     # Xử lý kết quả
                     if result == False:  # Người chơi muốn thoát game hoàn toàn
+                        sound_manager.stop_music()
                         pygame.quit()
                         sys.exit()
                     elif result == "restart":
@@ -71,6 +75,7 @@ def run_game():
                     continue  # Vẫn tiếp tục vòng lặp để hiển thị menu chính
             else:
                 # Nếu không có tên người chơi (ví dụ: người dùng thoát)
+                sound_manager.stop_music()
                 pygame.quit()
                 sys.exit()
         except Exception as e:

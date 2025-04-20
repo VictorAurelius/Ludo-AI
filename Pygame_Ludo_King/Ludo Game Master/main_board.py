@@ -1,7 +1,7 @@
 import pygame
 import sys
 from pytmx.util_pygame import load_pygame  # Thêm import pytmx
-
+from sound_manager import SoundManager
 import os
 
 def resource_path(relative_path):
@@ -31,6 +31,7 @@ class MainBoard:
         self.scroll_start_pos = (0, 0)
         self.SCROLL_SPEED = 15
         
+        self.sound_manager = SoundManager()
         # Kích thước của các bản đồ
         self.map_width = 800
         self.map_height = 800
@@ -205,6 +206,7 @@ class MainBoard:
         if self.update_scroll_limits():
             self.draw_scrollbars()
 
+        self.sound_manager.draw_music_button(self.screen, self.scroll_x, self.scroll_y)
         pygame.display.flip()
 
 
@@ -517,6 +519,11 @@ class MainBoard:
                     self.player_names[self.active_input] = self.player_names[self.active_input][:-1]
                 elif len(self.player_names[self.active_input]) < 10:  # Giới hạn tối đa 10 ký tự
                     self.player_names[self.active_input] += event.unicode
+                    
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # Kiểm tra click nút nhạc
+                if self.sound_manager.check_music_button_click(event.pos, self.scroll_x, self.scroll_y):
+                    continue  # Bỏ qua xử lý click khác nếu đã click vào nút nhạc
         
         return None  # Không có kết quả đặc biệt
 
