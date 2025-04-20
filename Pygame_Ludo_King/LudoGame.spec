@@ -17,7 +17,8 @@ a = Analysis(
         ('assets_ver1/assets_nhat/Blue', 'assets_ver1/assets_nhat/Blue'),
         ('assets_ver1/assets_nhat/Yellow', 'assets_ver1/assets_nhat/Yellow'),
         ('assets_ver1/assets_nhat/Purple', 'assets_ver1/assets_nhat/Purple'),
-        ('img', 'img')
+        ('img', 'img'),
+        ('sound', 'sound')
     ],
     hiddenimports=[
         'main', 'Players', 'Pawns', 'States', 'Stars',
