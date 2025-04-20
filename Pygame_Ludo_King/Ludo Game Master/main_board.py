@@ -245,10 +245,8 @@ class MainBoard:
             self.input_boxes.append(input_rect)
 
             # Add toggle button for AI/Human
-            toggle_rect = pygame.Rect(570 - self.scroll_x, y_offset - self.scroll_y, 100, 40)
-            pygame.draw.rect(self.screen, (240, 240, 240), toggle_rect)
-            pygame.draw.rect(self.screen, (0, 0, 0), toggle_rect, 2)
-            toggle_text = "AI" if self.is_bot[i] else "Human"
+            toggle_rect = pygame.Rect(635 - self.scroll_x, y_offset - self.scroll_y, 100, 40)
+            toggle_text = "YES" if self.is_bot[i] else "NO"
             toggle_surface = input_font.render(toggle_text, True, (0, 0, 0))
             toggle_x = toggle_rect.centerx - toggle_surface.get_width() // 2
             toggle_y = toggle_rect.centery - toggle_surface.get_height() // 2
