@@ -31,7 +31,7 @@ class Star(pygame.sprite.Sprite):
         return pawn_center == (self.position[0], self.position[1])
         
     def apply_effect(self, pawn, statekeeper):
-        effect = random.randint(1, 1)
+        effect = random.randint(0, 1)
         if effect == 2:
             # Xúc xắc thêm lần nữa
             return "roll_again"

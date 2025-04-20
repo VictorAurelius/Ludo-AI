@@ -1115,7 +1115,12 @@ def main(player_names=None):
                                             
                                             # Hiển thị bảng xếp hạng nếu tất cả người chơi đã hoàn thành
                                             if len(finished_players) == len(Statekpr.players) - 1:
-                                                showing_ranking = True
+                                                # Tìm người chơi kế tiếp và thêm vào danh sách
+                                                for remaining_player in Statekpr.players:
+                                                    if remaining_player not in finished_players:
+                                                        finished_players.append(remaining_player)
+                                                        showing_ranking = True
+                                                        break
                                                 roll_button_enabled = False
                                                 print("Hiển thị bảng xếp hạng - tất cả người chơi đã hoàn thành")
                                                 for player in Statekpr.players:
