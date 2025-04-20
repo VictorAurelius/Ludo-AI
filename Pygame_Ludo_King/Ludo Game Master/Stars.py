@@ -15,6 +15,7 @@ def resource_path(relative_path):
         
     return os.path.join(base_path, relative_path)
 class Star(pygame.sprite.Sprite):
+    star_positions = []  # Danh sách chứa các vị trí của sao
     def __init__(self, position):
         super(Star, self).__init__()
         self.surf = pygame.image.load(resource_path('img/Star.png'))
@@ -220,8 +221,8 @@ for pos, coord in positions.items():
         available_positions.append(coord)
 
 # Chọn ngẫu nhiên 8 vị trí để đặt sao
-star_positions = random.sample(available_positions, 26)
-
+Star.star_positions = random.sample(available_positions, 26)
+star_positions = Star.star_positions
 # Tạo list chứa các đối tượng Star
 stars = pygame.sprite.Group()
 for pos in star_positions:
