@@ -86,9 +86,6 @@ star_effect_time = 0
 alert_time = 0
 
 # Thêm biến toàn cục để xử lý doubles và roll_again
-DOUBLES_DELAY = 1500  # Thời gian chờ (ms) khi tung được xúc xắc đôi
-last_doubles_time = 0  # Thời điểm tung được xúc xắc đôi
-doubles_waiting = False  # Đang trong trạng thái chờ sau khi tung được đôi
 got_roll_again_ai = False  # AI nhận được hiệu ứng roll_again
 
 # Biến để lưu thứ tự về đích
@@ -823,7 +820,7 @@ def can_reach_position(pawn, target_pos, max_moves):
     return distance <= max_moves
 
 def main(player_names=None):
-    global alert_manager,last_doubles_time, roll_button_bg,doubles_waiting, scroll_x, scroll_y, is_scrolling, scroll_start_pos
+    global alert_manager, roll_button_bg, got_roll_again_ai, scroll_x, scroll_y, is_scrolling, scroll_start_pos
     
     # Reset các biến cuộn
     scroll_x = 0
@@ -987,15 +984,6 @@ def main(player_names=None):
             # Sau khi tung xúc xắc, AI sẽ thực hiện nước đi
             #valid_move = current_player.Turn()  # Enable AI turn processing
             last_ai_move_time = current_time
-
-        # Kiểm tra nếu AI đang chờ do tung được doubles
-        if doubles_waiting and current_player and current_player.is_ai:
-            current_time = pygame.time.get_ticks()
-            if current_time - last_doubles_time >= DOUBLES_DELAY:
-                # Đã đợi đủ thời gian, kích hoạt lại nút tung xúc xắc cho AI
-                doubles_waiting = False
-                
-               
 
         # Initialize both dice with value 1 at start
         if not dice_animating and current_dice1 is None:
@@ -1241,22 +1229,18 @@ def main(player_names=None):
                             move_success,got_roll_again = current_player.Turn()
                             pygame.time.delay(100)
                             
-                            doubles = dice_num1 == dice_num2
                             can_move = move_success
                             any_pawn_animating = False
                             # THÊM DÒNG DEBUG NÀY
-                            print(f"AI {current_player.name} - doubles: {doubles}, move_success: {move_success}")
+                            print(f"AI {current_player.name} - move_success: {move_success}")
         
                             # Sửa phần xử lý AI rolls doubles
-                            if (doubles or got_roll_again) and move_success:
-                                message = "tung được xúc xắc đôi" if doubles else "nhận hiệu ứng roll thêm lần"
+                            if got_roll_again and move_success:
+                                message = "nhận hiệu ứng roll thêm lần"
                                 print(f"AI {current_player.name} {message}, được đi tiếp")
                                 alert_manager.add_alert(f"{current_player.name} {message}, được đi tiếp!", 2000)
                                 
-                                # Đánh dấu trạng thái chờ đợi sau khi tung được doubles hoặc roll_again
-                                doubles_waiting = True
-                                last_doubles_time = pygame.time.get_ticks()
-                                
+                                # Đánh dấu trạng thái chờ đợi sau khi tung được roll_again
                                 # QUAN TRỌNG: KHÔNG đặt roll_button_enabled = False ở đây
                                 # roll_button_enabled = False
                                 
@@ -1264,7 +1248,7 @@ def main(player_names=None):
                                 roll_button_enabled = True  # Cho phép AI tiếp tục tung xúc xắc
                                 # KHÔNG gọi Statekpr.find_next_valid_player() để giữ lượt cho AI
                             else:
-                                # Không phải doubles/roll_again hoặc không di chuyển được, chuyển lượt
+                                # Không phải roll_again hoặc không di chuyển được, chuyển lượt
                                 print(f"AI {current_player.name} kết thúc lượt")
                                 roll_button_enabled = True
                                 Statekpr.find_next_valid_player()
