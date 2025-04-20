@@ -15,7 +15,7 @@ def resource_path(relative_path):
         
     return os.path.join(base_path, relative_path)
 class Star(pygame.sprite.Sprite):
-    star_positions = []  # Danh sách chứa các vị trí của sao
+    
     def __init__(self, position):
         super(Star, self).__init__()
         self.surf = pygame.image.load(resource_path('img/Star.png'))
@@ -31,36 +31,11 @@ class Star(pygame.sprite.Sprite):
         return pawn_center == (self.position[0], self.position[1])
         
     def apply_effect(self, pawn, statekeeper):
-        effect = random.randint(0, 4)
-        if effect == 1:
+        effect = random.randint(1, 1)
+        if effect == 2:
             # Xúc xắc thêm lần nữa
             return "roll_again"
-        elif effect == 2:
-            # Dịch chuyển ngẫu nhiên
-            valid_positions = []
-            for pos in range(1, 97):
-                can_move = True
-                new_pos = pawn.dict[pos]
-                # Kiểm tra vị trí có quân nào không
-                for player in statekeeper.players:
-                    for other_pawn in player.pawnlist:
-                        if other_pawn != pawn and other_pawn.rect.center == new_pos:
-                            can_move = False
-                            break
-                    if not can_move:
-                        break
-                if can_move:
-                    valid_positions.append(pos)
-            
-            if valid_positions:
-                new_pos = random.choice(valid_positions)
-                pawn.counter = new_pos
-                pawn.rect.center = pawn.dict[new_pos]
-                return "teleported"
-        elif effect == 3:
-            # Xúc xắc thêm lần nữa
-            return "roll_again"
-        elif effect == 4:
+        elif effect == 1:
             # Dịch chuyển ngẫu nhiên
             valid_positions = []
             for pos in range(1, 97):
@@ -221,10 +196,10 @@ for pos, coord in positions.items():
         available_positions.append(coord)
 
 # Chọn ngẫu nhiên 8 vị trí để đặt sao
-Star.star_positions = random.sample(available_positions, 26)
-star_positions = Star.star_positions
+star_positions = random.sample(available_positions, 26)
 # Tạo list chứa các đối tượng Star
 stars = pygame.sprite.Group()
+__all__ = ['stars', 'star_positions']
 for pos in star_positions:
     star = Star(pos)
     stars.add(star)

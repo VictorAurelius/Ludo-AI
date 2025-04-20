@@ -25,7 +25,7 @@ class LudoAI:
             'star_move': 30.0,       # Di chuyển đến sao
             'danger_range': -20.0,   # Trong tầm ăn quân
             'difficult_goal': [-100, -80, -60, -40],  # Vị trí khó về đích
-            'exact_goal': [-100, -80, -60, -40],      # Cần roll chính xác
+            'exact_goal': [-1000, -800, -600, -400],      # Cần roll chính xác
             'starting': [120, 100, 80, 60]           # Ưu tiên xuất quân
         }
 
@@ -107,7 +107,9 @@ class LudoAI:
         # Xét từng quân của người chơi
         for pawn in player.pawnlist:
             # Trường hợp 1: Quân trong chuồng và tổng xúc xắc >= 10
-            if pawn.counter == 0 and dice_roll >= 10:
+            if ( pawn.counter == 0 and dice_roll >= 10 and 
+                not (hasattr(pawn, 'king') and pawn.king) and 
+                not (hasattr(pawn, 'has_reached_finish') and pawn.has_reached_finish)):
                 # Kiểm tra vị trí xuất phát có quân cùng màu không
                 blocked = False
                 start_pos = pawn.dict[1]

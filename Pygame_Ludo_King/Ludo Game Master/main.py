@@ -949,6 +949,7 @@ def main(player_names=None):
     
     #main game loop
     while mainLoop:
+        
         # Vẽ map từ Tiled
         win.blit(bgBoard, (0,0))
         #Set clock Tick
@@ -1082,15 +1083,17 @@ def main(player_names=None):
                                         break
 
                         # Tiếp tục xử lý các hiệu ứng khác và chuyển lượt như cũ
-                        if pawn.counter == 96 or pawn.counter == 97 and not pawn.king:
+                        if (pawn.counter == 96 or pawn.counter == 97) and not pawn.king:
                             print('PawnKing')
                             pawn.counter = 0
                             # Tìm người chơi sở hữu quân này
                             for player in Statekpr.players:
                                 if pawn in player.pawnlist:
+                                    
                                     # Tăng số quân về đích nếu chưa được tăng
                                     if not hasattr(pawn, 'has_reached_finish') or not pawn.has_reached_finish:
                                         player.pawns_home += 1
+                                        pawn.king = True
                                         pawn.has_reached_finish = True
                                         
                                     # Xác định vị trí về đích theo màu
@@ -1271,7 +1274,7 @@ def main(player_names=None):
                             continue
 
                         # Kích hoạt quân trong chuồng CHỈ khi tổng >= 10
-                        if pawn.counter == 0:
+                        if pawn.counter == 0 and not (hasattr(pawn, 'king') and pawn.king) and not (hasattr(pawn, 'has_reached_finish') and pawn.has_reached_finish):
                               # Mặc định là bị chặn
                             if dice_sum >= 10:
                                 position_blocked = False
@@ -1398,6 +1401,14 @@ def main(player_names=None):
                 
                 # Kiểm tra nếu click vào nút tung xúc xắc
                 if roll_button.collidepoint(adjusted_mouse_pos) and roll_button_enabled and not dice_animating:
+
+                    current_player = Statekpr.display_player
+                    if not current_player.turn:
+                        print(f"Player {current_player.name} turn property is False, should not be able to roll")
+                        continue  # Skip the rest of this iteration
+                        
+                    if not Statekpr.gamestart:
+                        Statekpr.start_game()
                     if not Statekpr.gamestart:
                         Statekpr.start_game()
                     # Start dice animation
@@ -1412,7 +1423,12 @@ def main(player_names=None):
                     dice_num1 = final_dice_value1 + 1  # Store final numbers (1-6)
                     dice_num2 = final_dice_value2 + 1
                     dice_sum = dice_num1 + dice_num2  # Calculate sum
-        
+                if current_player in finished_players:
+                    print(f"Người chơi {current_player.name} đã hoàn thành, bỏ qua lượt")
+                    roll_button_enabled = True
+                    Statekpr.find_next_valid_player()
+                    last_turn_change_time = pygame.time.get_ticks()
+                    continue
                     
                 
                 # Kiểm tra click vào quân cờ khi nút tung xúc xắc đang disable
