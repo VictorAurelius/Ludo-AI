@@ -3,6 +3,7 @@ import random
 import numpy as np
 from Players import Player
 from Pawns import Pawn
+from Stars import *
 
 class LudoAI:
     def __init__(self, statekeeper):
@@ -141,8 +142,7 @@ class LudoAI:
                                         break
                         
                         # Kiểm tra có đi vào ô sao không
-                        star_positions = [5, 18, 31, 44, 57, 70, 83]
-                        on_star = (pawn.counter + dice_roll) in star_positions
+                        on_star = (pawn.counter + dice_roll) in Star.star_positions
                         
                         # Tạo nước đi với metadata
                         move_data = {
