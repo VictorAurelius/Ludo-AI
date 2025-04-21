@@ -976,8 +976,6 @@ def main(player_names=None):
             print(f"AI tung được {dice_num1} và {dice_num2}, tổng: {dice_num1 + dice_num2}")
             roll_button_enabled = False
             
-            last_animation_time = current_time
-            
             # Sau khi tung xúc xắc, AI sẽ thực hiện nước đi
             #valid_move = current_player.Turn()  # Enable AI turn processing
             last_ai_move_time = current_time
@@ -1125,7 +1123,7 @@ def main(player_names=None):
                             teleport_chain_active = False
                         roll_button_enabled = True  # Kích hoạt lại nút tung xúc xắc
                         # Enable lại nút tung xúc xắc và chuyển lượt nếu không có hiệu ứng đặc biệt
-                        if not got_roll_again and not teleported:
+                        if  not teleported:
                             roll_button_enabled = True
                             if valid_move:
                                 # Reset trạng thái quân cờ
@@ -1146,11 +1144,7 @@ def main(player_names=None):
                                 
                                 # Kích hoạt nút tung xúc xắc và chuyển lượt
                                 roll_button_enabled = True
-                                if not got_roll_again:
-                                    Statekpr.find_next_valid_player()
-                                    Statekpr.update_display_player()
-                                    last_turn_change_time = pygame.time.get_ticks()
-                            
+                                
                         # Xóa trạng thái just_moved_out nếu có và đã hoàn thành mọi kiểm tra
                         if hasattr(pawn, 'just_moved_out'):
                             delattr(pawn, 'just_moved_out') 
@@ -1237,7 +1231,7 @@ def main(player_names=None):
                                 # QUAN TRỌNG: KHÔNG đặt roll_button_enabled = False ở đây
                                 roll_button_enabled = False
                                 Statekpr.find_next_valid_player()
-                                Statekpr.update_display_player()
+                                
                                 last_turn_change_time = pygame.time.get_ticks()
                                 
                             else:
@@ -1245,8 +1239,8 @@ def main(player_names=None):
                                 print(f"AI {current_player.name} kết thúc lượt")
                                 roll_button_enabled = True
                                 Statekpr.find_next_valid_player()
-                                Statekpr.update_display_player()
                                 last_turn_change_time = pygame.time.get_ticks()
+                            Statekpr.update_display_player()
                         except Exception as e:
                             print(f"Lỗi khi xử lý lượt AI: {e}")
                             # Đảm bảo chuyển lượt kể cả khi có lỗi
