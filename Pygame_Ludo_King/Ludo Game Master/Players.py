@@ -200,28 +200,28 @@ class Player():
     def Turn(self):
         """Handle player turn using the AI engine for better decision making"""
         self.update_active_and_next()
-        
+
         if self.is_ai:
             self.ai_action_completed = False
             print(f"{self.name} đang thực hiện lượt")
-            
+
             # Get dice values
             dice_sum = self.dice1 + self.dice2
             print(f"AI tung được {self.dice1} và {self.dice2}, tổng: {dice_sum}")
-            
+
             # Save initial state
             old_state = self._save_game_state()
-            
+
             # Sử dụng AI engine để quyết định nước đi tốt nhất
             best_move = self.ai_engine.get_best_move(self, dice_sum)
             move_made = False
-            got_roll_again = False
+
             if best_move:
                 try:
                     move_type = best_move[0]
                     pawn = best_move[1]
                     old_pos = pawn.counter
-                    
+
                     if move_type == "move_out":
                         print(f"{self.name} quyết định xuất chuồng")
                         move_made = self.move_out_onto_the_board(pawn)
@@ -230,31 +230,24 @@ class Player():
                         # Kích hoạt quân được chọn
                         for p in self.pawnlist:
                             p.activepawn = (p == pawn)
-                        
+
                         # Di chuyển quân
                         target_pos = move_data["target_position"]
                         pawn.move(dice_sum, self.Statekpr)
                         move_made = True
-                        
+
                         if move_data["can_capture"]:
                             print(f"{self.name} ăn quân tại vị trí {target_pos}")
                         elif move_data["on_star"]:
                             print(f"{self.name} di chuyển đến ô sao tại vị trí {target_pos}")
                         else:
                             print(f"{self.name} di chuyển quân từ {old_pos} đến {target_pos}")
-                    if move_made and hasattr(pawn, 'on_star') and pawn.on_star:
-                        star_pos = pawn.counter
-                        # Kiểm tra hiệu ứng của ô sao tại vị trí này
-                        # Giả sử stars là đối tượng toàn cục hoặc được truyền vào
-                        from Stars import stars  # Import ở đầu file hoặc truyền vào phương thức
-                        if star_pos in stars and stars[star_pos].get('effect') == 'roll_again':
-                            got_roll_again = True
-                            print(f"{self.name} đạt hiệu ứng roll_again từ ô sao!")
+                    
                 except Exception as e:
                     print(f"Lỗi khi thực hiện nước đi: {e}")
                     self._restore_game_state(old_state)
                     move_made = False
-            
+
             if move_made:
                 self.ai_action_completed = True
                 print(f"{self.name} hoàn thành lượt")
@@ -262,16 +255,13 @@ class Player():
             else:
                 print(f"{self.name} không thể di chuyển")
                 self._restore_game_state(old_state)
-            
-            # QUAN TRỌNG: Đảm bảo luợt được gán chính xác cho người chơi tiếp theo
-            # Không thay đổi gì ở đây, để main.py xử lý
-            return move_made,got_roll_again
+
+            # Đảm bảo không cướp lượt bot khác
+           
+            return move_made
         else:
             # Human player turn is handled by main.py
             print(f"{self.name} đang thực hiện lượt")
-            print(f"TRƯỚC KHI CHUYỂN LƯỢT: {self.name}")
-            
-            # QUAN TRỌNG: Không cập nhật turn ở đây để tránh xung đột
             return True
     
     #the method for moving the active players active pawn
@@ -409,13 +399,12 @@ class Player():
             if move_type == "move_out":
                 success = self.move_out_onto_the_board(pawn)
                 # Kiểm tra hiệu ứng roll_again
-                got_roll_again = success and hasattr(pawn, 'on_star') and pawn.on_star
-                return success, got_roll_again
+                
+                return success
             else:
                 success = self.move_pawn(pawn)
                 # Kiểm tra hiệu ứng roll_again
-                got_roll_again = success and hasattr(pawn, 'on_star') and pawn.on_star
-                return success, got_roll_again
+                return success
                 
         return False
 

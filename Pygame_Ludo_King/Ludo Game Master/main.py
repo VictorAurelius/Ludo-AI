@@ -85,8 +85,6 @@ star_effect_message = ""
 star_effect_time = 0
 alert_time = 0
 
-# Thêm biến toàn cục để xử lý doubles và roll_again
-got_roll_again_ai = False  # AI nhận được hiệu ứng roll_again
 
 # Biến để lưu thứ tự về đích
 finished_players = []
@@ -820,7 +818,7 @@ def can_reach_position(pawn, target_pos, max_moves):
     return distance <= max_moves
 
 def main(player_names=None):
-    global alert_manager, roll_button_bg, got_roll_again_ai, scroll_x, scroll_y, is_scrolling, scroll_start_pos
+    global alert_manager, roll_button_bg, scroll_x, scroll_y, is_scrolling, scroll_start_pos
     
     # Reset các biến cuộn
     scroll_x = 0
@@ -902,8 +900,7 @@ def main(player_names=None):
     #Set while loop variable
     mainLoop = True
     
-    # Kiểm tra va chạm với sao
-    got_roll_again = False  # Biến để kiểm tra có được tung lại không
+     # Biến để kiểm tra có được tung lại không
     teleported = False  # Biến để đánh dấu quân vừa được dịch chuyển
     valid_move = False  # Biến để kiểm tra nước đi hợp lệ
     
@@ -1226,7 +1223,7 @@ def main(player_names=None):
                         print(f"AI {current_player.name} đang thực hiện nước đi")
                         try:
                             # Thực hiện lượt của AI
-                            move_success,got_roll_again = current_player.Turn()
+                            move_success = current_player.Turn()
                             pygame.time.delay(100)
                             
                             can_move = move_success
@@ -1235,18 +1232,14 @@ def main(player_names=None):
                             print(f"AI {current_player.name} - move_success: {move_success}")
         
                             # Sửa phần xử lý AI rolls doubles
-                            if got_roll_again and move_success:
-                                message = "nhận hiệu ứng roll thêm lần"
-                                print(f"AI {current_player.name} {message}, được đi tiếp")
-                                alert_manager.add_alert(f"{current_player.name} {message}, được đi tiếp!", 2000)
+                            if  move_success:
                                 
-                                # Đánh dấu trạng thái chờ đợi sau khi tung được roll_again
                                 # QUAN TRỌNG: KHÔNG đặt roll_button_enabled = False ở đây
-                                # roll_button_enabled = False
+                                roll_button_enabled = False
+                                Statekpr.find_next_valid_player()
+                                Statekpr.update_display_player()
+                                last_turn_change_time = pygame.time.get_ticks()
                                 
-                                # Thay vào đó, đặt lại biến và giữ lượt cho AI hiện tại
-                                roll_button_enabled = True  # Cho phép AI tiếp tục tung xúc xắc
-                                # KHÔNG gọi Statekpr.find_next_valid_player() để giữ lượt cho AI
                             else:
                                 # Không phải roll_again hoặc không di chuyển được, chuyển lượt
                                 print(f"AI {current_player.name} kết thúc lượt")
